@@ -21,11 +21,16 @@ private:
     ofxQuadWarp warper;
     ofFbo fbo;
     ofxDatGui gui;
+    ofShader    shader;
+    ofImage     srcImg;
 
     float threshold, gain;
+    bool mask;
 
     void on2dPadEvent(ofxDatGui2dPadEvent e);
     void onSliderEvent(ofxDatGuiSliderEvent e);
+    void onToggleEvent(ofxDatGuiToggleEvent e);
 
     void reload();
+    void setupShader();
 };

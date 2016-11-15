@@ -3,6 +3,7 @@
 void ofApp::setup()
 {
     camera.setup();
+    srcImg.load("A.jpg");
 
     int w = camera.getWidth();
     int h = camera.getHeight();
@@ -20,16 +21,95 @@ void ofApp::setup()
     gui.add2dPad("bottom right", ofRectangle(0, 0, w, h));
     gui.add2dPad("bottom left", ofRectangle(0, 0, w, h));
     gui.addBreak();
-    gui.addSlider("threshold",0,255,127);
-    gui.addSlider("gain",0.,10.,1.);
+    gui.addToggle("mask", false);
+    gui.addSlider("threshold",0,1,0.5);
+    gui.addSlider("gain",0.,10.,1);
 
     gui.addHeader("Dynamic Mapping");
     gui.addFooter();
 
     gui.on2dPadEvent(this, &ofApp::on2dPadEvent);
     gui.onSliderEvent(this, &ofApp::onSliderEvent);
+    gui.onToggleEvent(this, &ofApp::onToggleEvent);
 
     reload();
+
+    setupShader();
+}
+
+void ofApp::setupShader(){
+#ifdef TARGET_OPENGLES
+shader.load("shaders_gles/alphamask.vert","shaders_gles/alphamask.frag");
+#else
+if(ofIsGLProgrammableRenderer()){
+    ofLogNotice("setupShader") << "using GLProgrammableRenderer " << endl;
+    string vertex = "#version 150\n\
+    \n\
+    uniform mat4 projectionMatrix;\n\
+    uniform mat4 modelViewMatrix;\n\
+    uniform mat4 modelViewProjectionMatrix;\n\
+    \n\
+    \n\
+    in vec4  position;\n\
+    in vec2  texcoord;\n\
+    \n\
+    out vec2 texCoordVarying;\n\
+    \n\
+    void main()\n\
+    {\n\
+        texCoordVarying = texcoord;\
+        gl_Position = modelViewProjectionMatrix * position;\n\
+    }";
+    string fragment = "#version 150\n\
+    \n\
+    uniform sampler2DRect tex0;\
+    uniform sampler2DRect maskTex;\
+    in vec2 texCoordVarying;\n\
+    \
+    out vec4 fragColor;\n\
+    void main (void){\
+    vec2 pos = texCoordVarying;\
+    \
+    vec3 src = texture(tex0, pos).rgb;\
+    float mask = texture(maskTex, pos).r;\
+    \
+    fragColor = vec4( src , mask);\
+    }";
+    shader.setupShaderFromSource(GL_VERTEX_SHADER, vertex);
+    shader.setupShaderFromSource(GL_FRAGMENT_SHADER, fragment);
+    shader.bindDefaults();
+    shader.linkProgram();
+}else{
+    ofFile shaderFile;
+    shaderFile.open("shader/mask.frag");
+    // TODO move this to a file
+    string shaderProgram = "#version 120\n \
+    #extension GL_ARB_texture_rectangle : enable\n \
+    \
+    uniform sampler2DRect tex0;\
+    uniform sampler2DRect maskTex;\
+    uniform bool maskFlag;\
+    uniform float gain;\
+    uniform float threshold;\
+    \
+    void main (void){\
+    vec2 pos = gl_TexCoord[0].st;\
+    \
+    vec3 src = texture2DRect(tex0, pos).rgb;\
+    float mask = texture2DRect(maskTex, pos).r;\
+    mask *= gain * step(threshold, mask);\
+    \
+    if (maskFlag){\
+        gl_FragColor = vec4( src , mask);\
+    } else {\
+        gl_FragColor = vec4(mask,mask,mask,1.);\
+    }\
+    }";
+    shader.setupShaderFromSource(GL_FRAGMENT_SHADER, shaderProgram);
+            //shader.load("shader/mask");
+    shader.linkProgram();
+}
+#endif
 }
 
 void ofApp::update()
@@ -41,13 +121,24 @@ void ofApp::update()
 
 void ofApp::draw()
 {
+    ofClear(0, 0, 0, 255);
     // If the camera isn't ready, the curFrame will be empty.
     if(!camera.isReady()) return;
 
     // Camera doesn't draw itself, curFrame does.
 
     fbo.begin();
-    curFrame.draw(0, 0);
+    ofClear(0, 0, 0, 0);
+
+    shader.begin();
+    shader.setUniformTexture("maskTex", curFrame.getTexture(), 1 );
+    shader.setUniform1i("maskFlag", mask);
+    shader.setUniform1f("threshold", threshold);
+    shader.setUniform1f("gain", gain);
+    //ofLogNotice("shader values") << "gain : " << gain << " threshold : " << threshold;
+    srcImg.draw(0,0);
+    shader.end();
+
     fbo.end();
 
     //======================== get our quad warp matrix.
@@ -93,6 +184,11 @@ void ofApp::onSliderEvent(ofxDatGuiSliderEvent e){
 
     if (e.target->is("threshold")) threshold = e.value;
     else if (e.target->is("gain")) gain = e.value;
+}
+
+void ofApp::onToggleEvent(ofxDatGuiToggleEvent e){
+
+    if (e.target->is("mask")) mask = e.checked;
 }
 
 void ofApp::keyPressed(ofKeyEventArgs& key)
