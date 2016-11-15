@@ -1,0 +1,12 @@
+[submodule "ofxLibdc"]
+	path = ofxLibdc
+	url = https://github.com/avilleret/ofxLibdc.git
+[submodule "ofxQuadWarp"]
+	path = ofxQuadWarp
+	url = https://github.com/avilleret/ofxQuadWarp
+[submodule "ofxHomography"]
+	path = ofxHomography
+	url = https://github.com/paulobarcelos/ofxHomography
+[submodule "ofxDatGui"]
+	path = ofxDatGui
+	url = https://github.com/avilleret/ofxDatGui.git

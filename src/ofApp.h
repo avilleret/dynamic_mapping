@@ -1,6 +1,9 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxLibdc.h"
+#include "ofxQuadWarp.h"
+#include "ofxDatGui.h"
 
 class ofApp : public ofBaseApp
 {
@@ -8,26 +11,21 @@ class ofApp : public ofBaseApp
     void setup  ();
     void update ();
     void draw   ();
-    void exit   ();
+    void exit();
 
-    void keyPressed      (ofKeyEventArgs&);
-    void keyReleased     (ofKeyEventArgs&);
+    void keyPressed (ofKeyEventArgs&);
 
-    void mouseMoved      (ofMouseEventArgs&);
-    void mouseDragged    (ofMouseEventArgs&);
-    void mousePressed    (ofMouseEventArgs&);
-    void mouseReleased   (ofMouseEventArgs&);
-    void mouseScrolled   (ofMouseEventArgs&);
-    void mouseEntered    (ofMouseEventArgs&);
-    void mouseExited     (ofMouseEventArgs&);
+private:
+    ofxLibdc::Camera camera;
+    ofImage curFrame;
+    ofxQuadWarp warper;
+    ofFbo fbo;
+    ofxDatGui gui;
 
-    void touchDown       (ofTouchEventArgs&);
-    void touchMoved      (ofTouchEventArgs&);
-    void touchUp         (ofTouchEventArgs&);
-    void touchDoubleTap  (ofTouchEventArgs&);
-    void touchCancelled  (ofTouchEventArgs&);
+    float threshold, gain;
 
-    void windowResized   (ofResizeEventArgs&);
-    void dragged         (ofDragInfo&);
-    void messageReceived (ofMessage&);
+    void on2dPadEvent(ofxDatGui2dPadEvent e);
+    void onSliderEvent(ofxDatGuiSliderEvent e);
+
+    void reload();
 };
