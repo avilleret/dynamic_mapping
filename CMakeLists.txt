@@ -1,38 +1,40 @@
-project(ofApp)
-set(APP ofApp)
+project(dynamic_mapping)
 
 cmake_minimum_required(VERSION 2.8)
 
 include(../of/openFrameworks.cmake)
 find_package( DC1394 REQUIRED )
+find_package( OpenCV REQUIRED )
 
 ofxaddon(ofxLibdc)
 ofxaddon(ofxHomography)
 ofxaddon(ofxQuadWarp)
 ofxaddon(ofxDatGui)
+ofxaddon(ofxCv)
 
 set(SOURCES
     src/main.cpp
-    src/ofApp.cpp
+    src/dynamic_mapping.cpp
 )
 
 add_executable(
-    ${APP}
+    ${CMAKE_PROJECT_NAME}
     MACOSX_BUNDLE
     ${SOURCES}
     ${OFXADDONS_SOURCES}
 )
 
 target_link_libraries(
-    ${APP}
+    ${CMAKE_PROJECT_NAME}
     ${OPENFRAMEWORKS_LIBRARIES}
     ${DC1394_LIBRARIES}
+    ${OpenCV_LIBS}
 )
 
 set_target_properties(
-    ${APP} PROPERTIES
+    ${CMAKE_PROJECT_NAME} PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST
     "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
 )
 
-cotire(${APP})
+cotire(${CMAKE_PROJECT_NAME})

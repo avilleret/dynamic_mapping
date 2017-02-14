@@ -10,3 +10,6 @@
 [submodule "ofxDatGui"]
 	path = ofxDatGui
 	url = https://github.com/avilleret/ofxDatGui.git
+[submodule "ofxCv"]
+	path = ofxCv
+	url = https://github.com/avilleret/ofxCv
