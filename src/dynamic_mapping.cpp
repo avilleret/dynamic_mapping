@@ -1,12 +1,11 @@
-#include "ofApp.h"
+#include "dynamic_mapping.h"
 
-void ofApp::setup()
+void dynamic_mapping::setup()
 {
-    camera.setup();
     srcImg.load("A.jpg");
 
-    int w = camera.getWidth();
-    int h = camera.getHeight();
+    int w = 640;
+    int h = 480;
     int x = (ofGetWidth() - w) * 0.5;       // center on screen.
     int y = (ofGetHeight() - h) * 0.5;     // center on screen.
 
@@ -22,22 +21,23 @@ void ofApp::setup()
     gui.add2dPad("bottom left", ofRectangle(0, 0, w, h));
     gui.addBreak();
     gui.addToggle("mask", false);
-    gui.addSlider("threshold",0,1,0.5);
+    gui.addSlider("threshold",0,10,0.5);
     gui.addSlider("gain",0.,10.,1);
 
     gui.addHeader("Dynamic Mapping");
     gui.addFooter();
 
-    gui.on2dPadEvent(this, &ofApp::on2dPadEvent);
-    gui.onSliderEvent(this, &ofApp::onSliderEvent);
-    gui.onToggleEvent(this, &ofApp::onToggleEvent);
+    gui.on2dPadEvent(this, &dynamic_mapping::on2dPadEvent);
+    gui.onSliderEvent(this, &dynamic_mapping::onSliderEvent);
+    gui.onToggleEvent(this, &dynamic_mapping::onToggleEvent);
+    gui.setAutoDraw(false);
 
     reload();
 
     setupShader();
 }
 
-void ofApp::setupShader(){
+void dynamic_mapping::setupShader(){
 #ifdef TARGET_OPENGLES
 shader.load("shaders_gles/alphamask.vert","shaders_gles/alphamask.frag");
 #else
@@ -112,33 +112,35 @@ if(ofIsGLProgrammableRenderer()){
 #endif
 }
 
-void ofApp::update()
+void dynamic_mapping::update()
 {
-    if(camera.grabVideo(curFrame)) {
-        curFrame.update();
-    }
+   if (showGui){
+     gui.update();
+   }
+
 }
 
-void ofApp::draw()
+void dynamic_mapping::draw()
 {
     ofClear(0, 0, 0, 255);
     // If the camera isn't ready, the curFrame will be empty.
-    if(!camera.isReady()) return;
+    if (!(voxelstrackPtr && !voxelstrackPtr->composer.m_sources.empty())) return;
 
-    // Camera doesn't draw itself, curFrame does.
+    // ofTexture videoTex(voxelstrackPtr->composer.m_sources[0]->getTexture());
 
     fbo.begin();
     ofClear(0, 0, 0, 0);
 
     shader.begin();
-    shader.setUniformTexture("maskTex", curFrame.getTexture(), 1 );
+    shader.setUniformTexture("maskTex", voxelstrackPtr->composer.m_sources[0]->getFbo().getTexture(), 1 );
     shader.setUniform1i("maskFlag", mask);
     shader.setUniform1f("threshold", threshold);
     shader.setUniform1f("gain", gain);
-    //ofLogNotice("shader values") << "gain : " << gain << " threshold : " << threshold;
+    //ofLogNotice("shader values") << "mask : " << mask << " gain : " << gain << " threshold : " << threshold;
     srcImg.draw(0,0);
     shader.end();
 
+    //curFrame.draw(0,0);
     fbo.end();
 
     //======================== get our quad warp matrix.
@@ -149,18 +151,20 @@ void ofApp::draw()
 
     ofPushMatrix();
     ofMultMatrix(mat);
-    fbo.draw(0, 0);
+    voxelstrackPtr->composer.m_sources[0]->getFbo().getTexture().draw(0,0);
+    //fbo.draw(0, 0);
     ofPopMatrix();
 
-    if (gui.getAutoDraw()){
+    if (showGui){
         warper.draw();
+        gui.draw();
     }
 }
 
-void ofApp::exit(){
+void dynamic_mapping::exit(){
 }
 
-void ofApp::on2dPadEvent(ofxDatGui2dPadEvent e){
+void dynamic_mapping::on2dPadEvent(ofxDatGui2dPadEvent e){
     vector<ofPoint> line(warper.getSourcePoints());
 
     if (e.target->is("top left")) {
@@ -180,51 +184,24 @@ void ofApp::on2dPadEvent(ofxDatGui2dPadEvent e){
     warper.setSourcePoints(line);
 }
 
-void ofApp::onSliderEvent(ofxDatGuiSliderEvent e){
+void dynamic_mapping::onSliderEvent(ofxDatGuiSliderEvent e){
 
     if (e.target->is("threshold")) threshold = e.value;
     else if (e.target->is("gain")) gain = e.value;
 }
 
-void ofApp::onToggleEvent(ofxDatGuiToggleEvent e){
+void dynamic_mapping::onToggleEvent(ofxDatGuiToggleEvent e){
 
     if (e.target->is("mask")) mask = e.checked;
 }
 
-void ofApp::keyPressed(ofKeyEventArgs& key)
+void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
 {
-    // TODO move that ugly part into a class that inherit from ofxDatGui2dPad
-    ofxDatGui2dPad * pad = 0;
-    if ( (pad = gui.get2dPad("top left")) && pad->getFocused()) ;
-    else if ((pad = gui.get2dPad("top right")) && pad->getFocused()) ;
-    else if ((pad = gui.get2dPad("bottom right")) && pad->getFocused()) ;
-    else if ((pad = gui.get2dPad("bottom left")) && pad->getFocused()) ;
-
-    if ( pad ){
-        switch ( key.key ){
-        case OF_KEY_LEFT:
-            pad->setPoint(ofPoint(pad->getPoint().x-1, pad->getPoint().y));
-            break;
-        case OF_KEY_UP:
-            pad->setPoint(ofPoint(pad->getPoint().x, pad->getPoint().y-1));
-            break;
-        case OF_KEY_RIGHT:
-            pad->setPoint(ofPoint(pad->getPoint().x+1, pad->getPoint().y));
-            break;
-        case OF_KEY_DOWN:
-            pad->setPoint(ofPoint(pad->getPoint().x, pad->getPoint().y+1));
-            break;
-        default:
-            ;
-        }
-        pad->dispatchEvent();
-    }
-
     switch(key.key){
     case 'r': // reset warper;
     {
-        int w = camera.getWidth();
-        int h = camera.getHeight();
+        int w = 640;
+        int h = 480;
         int x = (ofGetWidth() - w) * 0.5;       // center on screen.
         int y = (ofGetHeight() - h) * 0.5;     // center on screen.
         ofxDatGui2dPad * pad = gui.get2dPad("top left");
@@ -244,7 +221,7 @@ void ofApp::keyPressed(ofKeyEventArgs& key)
         break;
     }
     case 'h':
-        gui.setAutoDraw(!gui.getAutoDraw());
+        showGui = !showGui;
         break;
     case 's':
         warper.save();
@@ -256,7 +233,7 @@ void ofApp::keyPressed(ofKeyEventArgs& key)
     }
 }
 
-void ofApp::reload(){
+void dynamic_mapping::reload(){
     warper.load(); // reload last saved changes.)
     vector<ofPoint> src = warper.getSourcePoints();
 

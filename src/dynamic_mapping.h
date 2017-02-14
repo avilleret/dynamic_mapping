@@ -5,7 +5,9 @@
 #include "ofxQuadWarp.h"
 #include "ofxDatGui.h"
 
-class ofApp : public ofBaseApp
+#include "voxelstrack.h"
+
+class dynamic_mapping : public ofBaseApp
 {
   public:
     void setup  ();
@@ -15,9 +17,9 @@ class ofApp : public ofBaseApp
 
     void keyPressed (ofKeyEventArgs&);
 
+    shared_ptr<voxelstrack> voxelstrackPtr;
+
 private:
-    ofxLibdc::Camera camera;
-    ofImage curFrame;
     ofxQuadWarp warper;
     ofFbo fbo;
     ofxDatGui gui;
@@ -26,6 +28,7 @@ private:
 
     float threshold, gain;
     bool mask;
+    bool showGui;
 
     void on2dPadEvent(ofxDatGui2dPadEvent e);
     void onSliderEvent(ofxDatGuiSliderEvent e);

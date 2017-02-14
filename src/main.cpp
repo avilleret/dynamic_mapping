@@ -4,9 +4,9 @@ int main()
 {
   ofGLFWWindowSettings settings;
 
-  settings.width = 1680;
-  settings.height = 800;
-  settings.setPosition(ofPoint(1520,0));
+  settings.width = 1400;
+  settings.height = 1050;
+  settings.setPosition(ofPoint(1920,0));
   settings.decorated = false;
 
   auto window = ofCreateWindow(settings);
