@@ -24,7 +24,9 @@ private:
     ofFbo fbo;
     ofxDatGui gui;
     ofShader    shader;
-    ofImage     srcImg;
+    std::vector<ofImage> images;
+    ofTexture texture;
+    ofColor clearColor;
 
     float threshold, gain;
     bool mask;
@@ -33,6 +35,8 @@ private:
     void on2dPadEvent(ofxDatGui2dPadEvent e);
     void onSliderEvent(ofxDatGuiSliderEvent e);
     void onToggleEvent(ofxDatGuiToggleEvent e);
+    void onColorPickerEvent(ofxDatGuiColorPickerEvent e);
+
 
     void reload();
     void setupShader();

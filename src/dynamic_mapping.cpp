@@ -2,27 +2,42 @@
 
 void dynamic_mapping::setup()
 {
-    srcImg.load("A.jpg");
+    ofDirectory dir;
+    dir.listDir("images/of_logos");
+    dir.sort(); // in linux the file system doesn't return file lists ordered in alphabetical order
 
-    int w = 640;
-    int h = 480;
-    int x = (ofGetWidth() - w) * 0.5;       // center on screen.
-    int y = (ofGetHeight() - h) * 0.5;     // center on screen.
+    //allocate the vector to have as many ofImages as files
+    if( dir.size() ){
+            images.assign(dir.size(), ofImage());
+    }
+
+    // you can now iterate through the files and load them into the ofImage vector
+    for(int i = 0; i < (int)dir.size(); i++){
+            if(i<images.size()) images[i].load(dir.getPath(i));
+            i++;
+    }
+
+    texture.loadData(images[0].getPixels());
+
+    int w = ofGetWidth();
+    int h = ofGetHeight();
+    int x = 0;
+    int y = 0;
 
     fbo.allocate(w,h);
 
-    warper.setSourceRect(ofRectangle(0, 0, w, h));              // this is the source rectangle which is the size of the image and located at ( 0, 0 )
-    warper.setTargetRect(ofRectangle(x,y,w,h));
+    warper.setSourceRect(ofRectangle(0, 0, voxelstrackPtr->bgSub.thresholded.getWidth(), voxelstrackPtr->bgSub.thresholded.getHeight()));              // this is the source rectangle which is the size of the image and located at ( 0, 0 )
+    warper.setTargetRect(ofRectangle(0,0,w,h));
     warper.setup();
 
-    gui.add2dPad("top left", ofRectangle(0, 0, w, h));
-    gui.add2dPad("top right", ofRectangle(0, 0, w, h));
-    gui.add2dPad("bottom right", ofRectangle(0, 0, w, h));
-    gui.add2dPad("bottom left", ofRectangle(0, 0, w, h));
+    gui.addSlider("source width", 0, 1920, 640);
+    gui.addSlider("source height", 0, 1080, 480);
+
     gui.addBreak();
     gui.addToggle("mask", false);
     gui.addSlider("threshold",0,10,0.5);
     gui.addSlider("gain",0.,10.,1);
+    gui.addColorPicker("Clear color", ofColor::black);
 
     gui.addHeader("Dynamic Mapping");
     gui.addFooter();
@@ -30,6 +45,7 @@ void dynamic_mapping::setup()
     gui.on2dPadEvent(this, &dynamic_mapping::on2dPadEvent);
     gui.onSliderEvent(this, &dynamic_mapping::onSliderEvent);
     gui.onToggleEvent(this, &dynamic_mapping::onToggleEvent);
+    gui.onColorPickerEvent(this, &dynamic_mapping::onColorPickerEvent);
     gui.setAutoDraw(false);
 
     reload();
@@ -122,7 +138,7 @@ void dynamic_mapping::update()
 
 void dynamic_mapping::draw()
 {
-    ofClear(0, 0, 0, 255);
+    ofClear(clearColor);
     // If the camera isn't ready, the curFrame will be empty.
     if (!(voxelstrackPtr && !voxelstrackPtr->composer.m_sources.empty())) return;
 
@@ -132,12 +148,12 @@ void dynamic_mapping::draw()
     ofClear(0, 0, 0, 0);
 
     shader.begin();
-    shader.setUniformTexture("maskTex", voxelstrackPtr->composer.m_sources[0]->getFbo().getTexture(), 1 );
+    shader.setUniformTexture("maskTex", texture, 1 );
     shader.setUniform1i("maskFlag", mask);
     shader.setUniform1f("threshold", threshold);
     shader.setUniform1f("gain", gain);
     //ofLogNotice("shader values") << "mask : " << mask << " gain : " << gain << " threshold : " << threshold;
-    srcImg.draw(0,0);
+    images[0].draw(0,0);
     shader.end();
 
     //curFrame.draw(0,0);
@@ -151,8 +167,15 @@ void dynamic_mapping::draw()
 
     ofPushMatrix();
     ofMultMatrix(mat);
-    voxelstrackPtr->composer.m_sources[0]->getFbo().getTexture().draw(0,0);
-    //fbo.draw(0, 0);
+    // voxelstrackPtr->composer.m_sources[0]->getFbo().getTexture().draw(0,0);
+    int i = 0;
+    for(auto rect : voxelstrackPtr->contour.finder.getBoundingRects()){
+      if (i<images.size())
+        images[i].draw(rect.x,rect.y,rect.width, rect.height);
+    }
+    voxelstrackPtr->bgSub.thresholded.draw(0,0);
+    voxelstrackPtr->contour.finder.draw();
+    fbo.draw(0, 0);
     ofPopMatrix();
 
     if (showGui){
@@ -195,15 +218,22 @@ void dynamic_mapping::onToggleEvent(ofxDatGuiToggleEvent e){
     if (e.target->is("mask")) mask = e.checked;
 }
 
+void dynamic_mapping::onColorPickerEvent(ofxDatGuiColorPickerEvent e){
+
+    if (e.target->is("clear color")) clearColor = e.color;
+}
+
 void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
 {
     switch(key.key){
     case 'r': // reset warper;
     {
-        int w = 640;
-        int h = 480;
+        int w = gui.getSlider("source width")->getValue();
+        int h = gui.getSlider("source height")->getValue();
         int x = (ofGetWidth() - w) * 0.5;       // center on screen.
         int y = (ofGetHeight() - h) * 0.5;     // center on screen.
+
+        warper.setSourceRect(ofRectangle(0, 0, w, h));
         ofxDatGui2dPad * pad = gui.get2dPad("top left");
         pad->setPoint(ofPoint(1,1));
         pad->dispatchEvent();
@@ -217,7 +247,7 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
         pad->setPoint(ofPoint(1,h-1));
         pad->dispatchEvent();
 
-        warper.setTargetRect(ofRectangle(x,y,w,h));
+        warper.setTargetRect(ofRectangle(0,0,ofGetWidth(), ofGetHeight()));
         break;
     }
     case 'h':
