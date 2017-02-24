@@ -1,7 +1,24 @@
 #include "dynamic_mapping.h"
 
+
+void Blob::draw(){
+    ofPushMatrix();
+    ofPushStyle();
+    ofNoFill();
+    ofDrawRectangle(bounding_box);
+    string msg = ofToString(id);
+    ofDrawBitmapString(msg, centroid.x + 4, centroid.y);
+    // ofDrawCircle(centroid.x,centroid.y,2);
+    ofScale(5, 5);
+    ofDrawLine(0, 0, velocity.x, velocity.y);
+    ofPopStyle();
+    ofPopMatrix();
+}
+
 void dynamic_mapping::setup()
 {
+    ofSetLogLevel(OF_LOG_NOTICE);
+
     ofDirectory dir;
     dir.listDir("images/of_logos");
     dir.sort(); // in linux the file system doesn't return file lists ordered in alphabetical order
@@ -13,7 +30,11 @@ void dynamic_mapping::setup()
 
     // you can now iterate through the files and load them into the ofImage vector
     for(int i = 0; i < (int)dir.size(); i++){
-            if(i<images.size()) images[i].load(dir.getPath(i));
+            if(i<images.size()) {
+                // images[i].allocate(OF_IMAGE_COLOR_ALPHA);
+                images[i].setImageType(OF_IMAGE_COLOR_ALPHA);
+                images[i].load(dir.getPath(i));
+            }
             i++;
     }
 
@@ -26,7 +47,10 @@ void dynamic_mapping::setup()
 
     fbo.allocate(w,h);
 
-    warper.setSourceRect(ofRectangle(0, 0, voxelstrackPtr->bgSub.thresholded.getWidth(), voxelstrackPtr->bgSub.thresholded.getHeight()));              // this is the source rectangle which is the size of the image and located at ( 0, 0 )
+    fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
+    fgmask.setColor(ofColor::white);
+    pix_share.setup("/video_server");
+    warper.setSourceRect(ofRectangle(0, 0, pix_share.getWidth(), pix_share.getHeight()));              // this is the source rectangle which is the size of the image and located at ( 0, 0 )
     warper.setTargetRect(ofRectangle(0,0,w,h));
     warper.setup();
 
@@ -51,6 +75,11 @@ void dynamic_mapping::setup()
     reload();
 
     setupShader();
+
+    perlinShader.setupShaderFromFile(GL_FRAGMENT_SHADER,ofToDataPath("shaders/perlin.frag"));
+    perlinShader.linkProgram();
+
+    receiver.setup(3615);
 }
 
 void dynamic_mapping::setupShader(){
@@ -130,30 +159,69 @@ if(ofIsGLProgrammableRenderer()){
 
 void dynamic_mapping::update()
 {
-   if (showGui){
-     gui.update();
-   }
+    if(receiver.hasWaitingMessages()) blobs.clear(); // clear only when new blos are received
+    // check for waiting messages
+    while(receiver.hasWaitingMessages()){
+        // get the next message
+        ofxOscMessage m;
+        receiver.getNextMessage(m);
+        if(m.getAddress() == "/b"){
+            if (m.getNumArgs() == 10){
+                Blob blob;
+                int i=0;
+                blob.id = m.getArgAsInt(i++);
+                blob.centroid.x = m.getArgAsFloat(i++);
+                blob.centroid.y = m.getArgAsFloat(i++);
+                blob.area = m.getArgAsFloat(i++);
+                blob.bounding_box.x = m.getArgAsFloat(i++);
+                blob.bounding_box.y = m.getArgAsFloat(i++);
+                blob.bounding_box.width = m.getArgAsFloat(i++);
+                blob.bounding_box.height = m.getArgAsFloat(i++);
+                blob.velocity.x = m.getArgAsFloat(i++);
+                blob.velocity.y = m.getArgAsFloat(i++);
+                blobs.push_back(blob);
+            } else {
+                ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
+            }
 
+        }
+    }
+
+    if (showGui){
+        gui.update();
+    }
+
+    vector<ofPoint> src = warper.getSourcePoints();
+    int width = src[2].x - src[0].x;
+    int height = src[2].y - src[0].y;
+    if (width != pix_share.getWidth() || height != pix_share.getHeight()){
+        warper.setSourceRect(ofRectangle(0,0,pix_share.getWidth(), pix_share.getHeight()));
+        fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
+    }
+
+    alpha++;
+    alpha = alpha%256;
+    pix_share.update();
+    fgmask.getPixels().setChannel(4,pix_share.getPixels());
 }
 
 void dynamic_mapping::draw()
 {
     ofClear(clearColor);
-    // If the camera isn't ready, the curFrame will be empty.
-    if (!(voxelstrackPtr && !voxelstrackPtr->composer.m_sources.empty())) return;
+    //ofScale(ofGetWidth()/pix_share.getWidth(), ofGetHeight()/pix_share.getHeight(),0.);
 
-    // ofTexture videoTex(voxelstrackPtr->composer.m_sources[0]->getTexture());
+    // ofLogVerbose(__func__) << "pix_share.size(): " << pix_share.getWidth() << "x" << pix_share.getHeight();
 
     fbo.begin();
     ofClear(0, 0, 0, 0);
 
     shader.begin();
-    shader.setUniformTexture("maskTex", texture, 1 );
+    //shader.setUniformTexture("maskTex", texture, 1 );
     shader.setUniform1i("maskFlag", mask);
     shader.setUniform1f("threshold", threshold);
     shader.setUniform1f("gain", gain);
     //ofLogNotice("shader values") << "mask : " << mask << " gain : " << gain << " threshold : " << threshold;
-    images[0].draw(0,0);
+    // images[0].draw(0,0);
     shader.end();
 
     //curFrame.draw(0,0);
@@ -167,17 +235,39 @@ void dynamic_mapping::draw()
 
     ofPushMatrix();
     ofMultMatrix(mat);
+    //pix_share.draw(0,0);
+
     // voxelstrackPtr->composer.m_sources[0]->getFbo().getTexture().draw(0,0);
+/*
+    ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
     int i = 0;
-    for(auto rect : voxelstrackPtr->contour.finder.getBoundingRects()){
-      if (i<images.size())
-        images[i].draw(rect.x,rect.y,rect.width, rect.height);
+    for(auto blob : blobs){
+      ofRectangle rect = blob.bounding_box;
+      if (i<images.size()){
+          ofSetColor(255, 255, 255,alpha);
+          images[i].draw(rect.x,rect.y,rect.width, rect.height);
+      }
     }
-    voxelstrackPtr->bgSub.thresholded.draw(0,0);
-    voxelstrackPtr->contour.finder.draw();
-    fbo.draw(0, 0);
+    */
+//    ofSetColor(255,255,255,255);
+
+  //  ofScale(1.,1.,0.);
+    //fgmask.draw(0,0);
+    pix_share.draw(0,0);
+
+
+    //ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
+
+    // for (auto blob : blobs) blob.draw();
+    // voxelstrackPtr->contour.finder.draw();
+    // fbo.draw(0, 0);
+
     ofPopMatrix();
 
+/*
+    perlinShader.begin();
+    perlinShader.end();
+*/
     if (showGui){
         warper.draw();
         gui.draw();

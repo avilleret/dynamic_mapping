@@ -4,8 +4,19 @@
 #include "ofxLibdc.h"
 #include "ofxQuadWarp.h"
 #include "ofxDatGui.h"
+#include "Pix_share.h"
+#include "ofxOsc.h"
 
-#include "voxelstrack.h"
+struct Blob {
+    int id;
+    ofVec2f centroid;
+    float area;
+    ofRectangle bounding_box;
+    ofVec2f velocity;
+    ofVec2f m_scale=ofVec2f(320,240);
+
+    void draw();
+};
 
 class dynamic_mapping : public ofBaseApp
 {
@@ -17,18 +28,26 @@ class dynamic_mapping : public ofBaseApp
 
     void keyPressed (ofKeyEventArgs&);
 
-    shared_ptr<voxelstrack> voxelstrackPtr;
-
 private:
     ofxQuadWarp warper;
     ofFbo fbo;
     ofxDatGui gui;
     ofShader    shader;
+    ofShader    perlinShader;
     std::vector<ofImage> images;
     ofTexture texture;
     ofColor clearColor;
 
+    Pix_share pix_share;
+
+    ofxOscReceiver receiver;
+
+    std::vector<Blob> blobs;
+
+    ofImage fgmask;;
+
     float threshold, gain;
+    int alpha;
     bool mask;
     bool showGui;
 

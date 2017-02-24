@@ -13,3 +13,6 @@
 [submodule "ofxCv"]
 	path = ofxCv
 	url = https://github.com/avilleret/ofxCv
+[submodule "ofxGem"]
+	path = ofxGem
+	url = https://github.com/avilleret/ofxGem.git

@@ -10,11 +10,13 @@ ofxaddon(ofxLibdc)
 ofxaddon(ofxHomography)
 ofxaddon(ofxQuadWarp)
 ofxaddon(ofxDatGui)
-ofxaddon(ofxCv)
+ofxaddon(ofxGem)
+ofxaddon(ofxOsc)
 
 set(SOURCES
     src/main.cpp
     src/dynamic_mapping.cpp
+    src/Pix_share.cpp
 )
 
 add_executable(

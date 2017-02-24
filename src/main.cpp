@@ -1,4 +1,4 @@
-#include "ofApp.h"
+#include "dynamic_mapping.h"
 
 int main()
 {
@@ -10,7 +10,7 @@ int main()
   settings.decorated = false;
 
   auto window = ofCreateWindow(settings);
-  auto app = make_shared<ofApp>();
+  auto app = make_shared<dynamic_mapping>();
   ofRunApp(window, app);
 
   return ofRunMainLoop();
