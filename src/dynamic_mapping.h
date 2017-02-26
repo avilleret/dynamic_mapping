@@ -37,7 +37,7 @@ private:
     ofShader    shader;
     ofShader    perlinShader;
     std::vector<ofImage> images;
-    ofTexture texture;
+    // ofTexture texture;
     ofTexture masktext;
     ofImage fgmask;
     cv::Mat cvmask;

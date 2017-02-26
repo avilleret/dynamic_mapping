@@ -33,7 +33,7 @@ void dynamic_mapping::setup()
       images.push_back(img);
     }
 
-    texture.loadData(images[0].getPixels());
+    // texture.loadData(images[0].getPixels());
 
     int w = ofGetWidth();
     int h = ofGetHeight();
@@ -42,7 +42,7 @@ void dynamic_mapping::setup()
 
     fbo.allocate(w,h);
 
-    texture.allocate(640, 480,OF_IMAGE_COLOR_ALPHA);
+    // texture.allocate(640, 480,OF_IMAGE_COLOR_ALPHA);
     fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR);
     fgmask.setColor(ofColor::black);
     pix_share.setup("/video_server");
@@ -178,6 +178,7 @@ if(ofIsGLProgrammableRenderer()){
 
 void dynamic_mapping::update()
 {
+    // ofLogNotice("UPDATE");
     if(receiver.hasWaitingMessages()) blobs.clear(); // clear only when new blos are received
     // check for waiting messages
     while(receiver.hasWaitingMessages()){
@@ -206,10 +207,12 @@ void dynamic_mapping::update()
         }
     }
 
-    if(pd.hasWaitingMessages()){
+    // std::cout << "blob size: " << blobs.size() << std::endl;
+
+    while(pd.hasWaitingMessages()){
         // get the next message
         ofxOscMessage m;
-        receiver.getNextMessage(m);
+        pd.getNextMessage(m);
         if(m.getAddress() == "/a"){
             if (m.getNumArgs() == 3){
                 alpha[0] = m.getArgAsInt(0);
@@ -231,6 +234,7 @@ void dynamic_mapping::update()
             line[3].x=m.getArgAsFloat(i++);
             line[3].y=m.getArgAsFloat(i++);
             warper.setSourcePoints(line);
+            ofLogNotice("OSC") << "update source points";
           } else {
             ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
           }
@@ -246,40 +250,44 @@ void dynamic_mapping::update()
             line[2].y=m.getArgAsFloat(i++);
             line[3].x=m.getArgAsFloat(i++);
             line[3].y=m.getArgAsFloat(i++);
-            // warper.setTargetPoints(line);
+            warper.setTargetPoints(line);
+            ofLogNotice("OSC") << "update target points";
           } else {
             ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
           }
         }
     }
 
-    std::cout << "blob size: " << blobs.size() << std::endl;
-
     if (showGui){
         gui.update();
     }
 
-    vector<ofPoint> src = warper.getSourcePoints();
-    int width = src[2].x - src[0].x;
-    int height = src[2].y - src[0].y;
-    if (width != pix_share.getWidth() || height != pix_share.getHeight()){
-        warper.setSourceRect(sourceRect);
-        fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
-        fgmask.setColor(ofColor::black);
-        texture.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
-    }
+    ofSetLogLevel("UPDATE", OF_LOG_WARNING);
+    ofLogNotice("UPDATE") << "fgmask.allocate" ;
+    fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
+    ofLogNotice("UPDATE") << "fgmask.setColor" ;
+    fgmask.setColor(ofColor::black);
+    // ofLogNotice("UPDATE") << "texture.allocate" ;
+    // texture.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
 
+    ofLogNotice("UPDATE") << "pix_share" ;
     pix_share.update();
+    ofLogNotice("UPDATE") << "cvmask" ;
     cvmask=ofxCv::toCv(pix_share.getPixels());
+    ofLogNotice("UPDATE") << "invert" ;
     cvmask = ~cvmask;
     ofImage tmp;
+    ofLogNotice("UPDATE") << "toOf" ;
     ofxCv::toOf(cvmask,tmp);
+    ofLogNotice("UPDATE") << "setChannel" ;
     fgmask.getPixels().setChannel(4,tmp);
     fgmask.update();
 }
 
 void dynamic_mapping::draw()
 {
+
+    // ofLogNotice("DRAW");
     ofClear(clearColor);
 
     ofMatrix4x4 mat = warper.getMatrix();
