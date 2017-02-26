@@ -30,6 +30,7 @@ class dynamic_mapping : public ofBaseApp
     void keyPressed (ofKeyEventArgs&);
 
 private:
+    ofRectangle sourceRect;
     ofxQuadWarp warper;
     ofFbo fbo;
     ofxDatGui gui;
@@ -40,7 +41,7 @@ private:
     ofTexture masktext;
     ofImage fgmask;
     cv::Mat cvmask;
-    ofColor clearColor;
+    ofColor clearColor=ofColor::black;
 
     Pix_share pix_share;
 

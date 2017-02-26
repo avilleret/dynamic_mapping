@@ -18,24 +18,19 @@ void Blob::draw(){
 void dynamic_mapping::setup()
 {
     ofSetLogLevel(OF_LOG_NOTICE);
+    ofSetVerticalSync(false);
+
+    sourceRect = ofRectangle(180,227,290,150);
 
     ofDirectory dir;
-    dir.listDir("images/of_logos");
+    dir.listDir("images/");
     dir.sort(); // in linux the file system doesn't return file lists ordered in alphabetical order
-
-    //allocate the vector to have as many ofImages as files
-    if( dir.size() ){
-            images.assign(dir.size(), ofImage());
-    }
 
     // you can now iterate through the files and load them into the ofImage vector
     for(int i = 0; i < (int)dir.size(); i++){
-            if(i<images.size()) {
-                // images[i].allocate(OF_IMAGE_COLOR_ALPHA);
-                images[i].setImageType(OF_IMAGE_COLOR_ALPHA);
-                images[i].load(dir.getPath(i));
-            }
-            i++;
+      ofImage img;
+      img.load(dir.getPath(i));
+      images.push_back(img);
     }
 
     texture.loadData(images[0].getPixels());
@@ -49,15 +44,32 @@ void dynamic_mapping::setup()
 
     texture.allocate(640, 480,OF_IMAGE_COLOR_ALPHA);
     fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR);
-    fgmask.setColor(ofColor::white);
+    fgmask.setColor(ofColor::black);
     pix_share.setup("/video_server");
-    warper.setSourceRect(ofRectangle(0, 0, pix_share.getWidth(), pix_share.getHeight()));              // this is the source rectangle which is the size of the image and located at ( 0, 0 )
+    warper.setSourceRect(sourceRect);              // this is the source rectangle which is the size of the image and located at ( 0, 0 )
     warper.setTargetRect(ofRectangle(0,0,w,h));
     warper.setup();
 
     gui.addSlider("source width", 0, 1920, 640);
     gui.addSlider("source height", 0, 1080, 480);
 
+    /*
+    gui.add2dPad("top left", ofRectangle(0,0,w,h));
+    gui.add2dPad("top right", ofRectangle(0,0,w,h));
+    gui.add2dPad("bottom right", ofRectangle(0,0,w,h));
+    gui.add2dPad("bottom left", ofRectangle(0,0,w,h));
+    */
+
+    /*
+    gui.add2dPad("src tl", ofRectangle(0,0,640,480));
+    gui.add2dPad("src tr", ofRectangle(0,0,640,480));
+    gui.add2dPad("src br", ofRectangle(0,0,640,480));
+    gui.add2dPad("src bl", ofRectangle(0,0,640,480));
+    */
+
+    gui.add2dPad("source rect position",ofRectangle(0,0,640,480));
+    gui.addSlider("source rect width",0,640,640);
+    gui.addSlider("source rect height",0,480,480);
     gui.addBreak();
     gui.addToggle("mask", false);
     gui.addSlider("threshold",0,10,0.5);
@@ -80,7 +92,7 @@ void dynamic_mapping::setup()
 
     ofLogNotice("setup") << "load perlin shader" << std::endl;
     perlinShader.load("shader/perlin");
-    // perlinShader.load("shader/noise");
+    //  perlinShader.load("shader/noise");
     //  perlinShader.setupShaderFromFile(GL_FRAGMENT_SHADER,ofToDataPath("shader/perlin.frag"));
     //  perlinShader.linkProgram();
     ofLogNotice("setup") << "loading done";
@@ -194,7 +206,7 @@ void dynamic_mapping::update()
         }
     }
 
-    while(pd.hasWaitingMessages()){
+    if(pd.hasWaitingMessages()){
         // get the next message
         ofxOscMessage m;
         receiver.getNextMessage(m);
@@ -206,7 +218,38 @@ void dynamic_mapping::update()
             } else {
                 ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
             }
-
+        } else if (m.getAddress() == "/warping/src"){
+          if (m.getNumArgs() == 8){
+            vector<ofPoint> line(warper.getSourcePoints());
+            int i =0;
+            line[0].x=m.getArgAsFloat(i++);
+            line[0].y=m.getArgAsFloat(i++);
+            line[1].x=m.getArgAsFloat(i++);
+            line[1].y=m.getArgAsFloat(i++);
+            line[2].x=m.getArgAsFloat(i++);
+            line[2].y=m.getArgAsFloat(i++);
+            line[3].x=m.getArgAsFloat(i++);
+            line[3].y=m.getArgAsFloat(i++);
+            warper.setSourcePoints(line);
+          } else {
+            ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
+          }
+        } else if (m.getAddress() == "/warping/dst"){
+          if (m.getNumArgs() == 8){
+            vector<ofPoint> line(warper.getTargetPoints());
+            int i =0;
+            line[0].x=m.getArgAsFloat(i++);
+            line[0].y=m.getArgAsFloat(i++);
+            line[1].x=m.getArgAsFloat(i++);
+            line[1].y=m.getArgAsFloat(i++);
+            line[2].x=m.getArgAsFloat(i++);
+            line[2].y=m.getArgAsFloat(i++);
+            line[3].x=m.getArgAsFloat(i++);
+            line[3].y=m.getArgAsFloat(i++);
+            // warper.setTargetPoints(line);
+          } else {
+            ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
+          }
         }
     }
 
@@ -220,8 +263,9 @@ void dynamic_mapping::update()
     int width = src[2].x - src[0].x;
     int height = src[2].y - src[0].y;
     if (width != pix_share.getWidth() || height != pix_share.getHeight()){
-        warper.setSourceRect(ofRectangle(0,0,pix_share.getWidth(), pix_share.getHeight()));
+        warper.setSourceRect(sourceRect);
         fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
+        fgmask.setColor(ofColor::black);
         texture.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
     }
 
@@ -247,18 +291,21 @@ void dynamic_mapping::draw()
     ofPushStyle();
     ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
 
+    /*
     for(int i = 0; i<blobs.size() && i<images.size(); i++){
       ofRectangle rect = blobs[i].bounding_box;
       ofSetColor(255, 255, 255, alpha[0]);
       images[i].draw(rect.x,rect.y,rect.width, rect.height);
     }
+    */
+
     ofPopStyle();
     ofPopMatrix();
 
   //  ofSetColor(ofColor::white);
 //    ofEnableAlphaBlending();
-    //pix_share.draw();
-    fgmask.draw(0,0);
+    pix_share.draw();
+    //fgmask.draw(0,0);
   //  ofEnableAlphaBlending();
 
     //fbo.draw(0, 0);
@@ -279,29 +326,58 @@ void dynamic_mapping::exit(){
 }
 
 void dynamic_mapping::on2dPadEvent(ofxDatGui2dPadEvent e){
-    vector<ofPoint> line(warper.getSourcePoints());
+    vector<ofPoint> targetLine(warper.getTargetPoints());
+    vector<ofPoint> srcLine(warper.getSourcePoints());
 
     if (e.target->is("top left")) {
-        line[0].x = e.x;
-        line[0].y = e.y;
+      targetLine[0].x = e.x;
+      targetLine[0].y = e.y;
     } else if (e.target->is("top right")) {
-        line[1].x = e.x;
-        line[1].y = e.y;
+      targetLine[1].x = e.x;
+      targetLine[1].y = e.y;
     } else if (e.target->is("bottom right")) {
-        line[2].x = e.x;
-        line[2].y = e.y;
+      targetLine[2].x = e.x;
+      targetLine[2].y = e.y;
     } else if (e.target->is("bottom left")) {
-        line[3].x = e.x;
-        line[3].y = e.y;
+      targetLine[3].x = e.x;
+      targetLine[3].y = e.y;
+    } else if (e.target->is("src tl")) {
+      ofLogNotice("__func__") << "set source top left to " << e.x << ";" << e.y;
+      srcLine[0].x = e.x;
+      srcLine[0].y = e.y;
+    } else if (e.target->is("src tr")) {
+      ofLogNotice("__func__") << "set source top right to " << e.x << ";" << e.y;
+      srcLine[1].x = e.x;
+      srcLine[1].y = e.y;
+    } else if (e.target->is("src br")) {
+      ofLogNotice("__func__") << "set source bottom right to " << e.x << ";" << e.y;
+      srcLine[2].x = e.x;
+      srcLine[2].y = e.y;
+    } else if (e.target->is("src bl")) {
+      ofLogNotice("__func__") << "set source bottom left to " << e.x << ";" << e.y;
+      srcLine[3].x = e.x;
+      srcLine[3].y = e.y;
+    } else if (e.target->is("source rect position")){
+      sourceRect.x = e.x;
+      sourceRect.y = e.y;
+      ofLogNotice(__func__) << "setSourceRect";
+      warper.setSourceRect(sourceRect);
     }
-
-    warper.setSourcePoints(line);
+    warper.setTargetPoints(targetLine);
+    warper.setSourcePoints(srcLine);
 }
 
 void dynamic_mapping::onSliderEvent(ofxDatGuiSliderEvent e){
 
     if (e.target->is("threshold")) threshold = e.value;
     else if (e.target->is("gain")) gain = e.value;
+    else if (e.target->is("source rect width")) {
+      sourceRect.width = e.value;
+      warper.setSourceRect(sourceRect);
+    } else if (e.target->is("source rect height")) {
+      sourceRect.height = e.value;
+      warper.setSourceRect(sourceRect);
+    }
 }
 
 void dynamic_mapping::onToggleEvent(ofxDatGuiToggleEvent e){
@@ -324,7 +400,7 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
         int x = (ofGetWidth() - w) * 0.5;       // center on screen.
         int y = (ofGetHeight() - h) * 0.5;     // center on screen.
 
-        warper.setSourceRect(ofRectangle(0, 0, w, h));
+        warper.setSourceRect(sourceRect);
         ofxDatGui2dPad * pad = gui.get2dPad("top left");
         pad->setPoint(ofPoint(1,1));
         pad->dispatchEvent();
@@ -349,6 +425,14 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
         break;
     case 'l':
         reload();
+    case OF_KEY_TAB:
+      {
+        ofLogNotice("Window positionX") << ofGetWindowPositionX();
+        if ( ofGetWindowPositionX() <= 0){
+          ofSetWindowPosition(1920,0);
+          ofSetWindowShape(1920,1200);
+        } else ofSetWindowPosition(0,0);
+      }
     default:
         ;
     }
@@ -356,8 +440,9 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
 
 void dynamic_mapping::reload(){
     warper.load(); // reload last saved changes.)
-    vector<ofPoint> src = warper.getSourcePoints();
-
+    warper.setSourceRect(sourceRect);
+/*
+    vector<ofPoin> src = warper.getSourceRect();
     ofxDatGui2dPad * pad = gui.get2dPad("top left");
     pad->setPoint(src[0]);
     pad = gui.get2dPad("top right");
@@ -366,4 +451,5 @@ void dynamic_mapping::reload(){
     pad->setPoint(src[2]);
     pad = gui.get2dPad("bottom left");
     pad->setPoint(src[3]);
+*/
 }
