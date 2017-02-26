@@ -12,6 +12,9 @@ ofxaddon(ofxQuadWarp)
 ofxaddon(ofxDatGui)
 ofxaddon(ofxGem)
 ofxaddon(ofxOsc)
+ofxaddon(ofxCv)
+
+include_directories(${CMAKE_CURRENT_LIST_DIR}/ofxCv/libs/ofxCv/include)
 
 set(SOURCES
     src/main.cpp

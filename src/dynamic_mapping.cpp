@@ -47,7 +47,8 @@ void dynamic_mapping::setup()
 
     fbo.allocate(w,h);
 
-    fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
+    texture.allocate(640, 480,OF_IMAGE_COLOR_ALPHA);
+    fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR);
     fgmask.setColor(ofColor::white);
     pix_share.setup("/video_server");
     warper.setSourceRect(ofRectangle(0, 0, pix_share.getWidth(), pix_share.getHeight()));              // this is the source rectangle which is the size of the image and located at ( 0, 0 )
@@ -61,7 +62,7 @@ void dynamic_mapping::setup()
     gui.addToggle("mask", false);
     gui.addSlider("threshold",0,10,0.5);
     gui.addSlider("gain",0.,10.,1);
-    gui.addColorPicker("Clear color", ofColor::black);
+    gui.addColorPicker("Clear color", ofColor::blue);
 
     gui.addHeader("Dynamic Mapping");
     gui.addFooter();
@@ -74,12 +75,18 @@ void dynamic_mapping::setup()
 
     reload();
 
-    setupShader();
+    // setupShader();
+    shader.load("shader/mask");
 
-    perlinShader.setupShaderFromFile(GL_FRAGMENT_SHADER,ofToDataPath("shaders/perlin.frag"));
-    perlinShader.linkProgram();
+    ofLogNotice("setup") << "load perlin shader" << std::endl;
+    perlinShader.load("shader/perlin");
+    // perlinShader.load("shader/noise");
+    //  perlinShader.setupShaderFromFile(GL_FRAGMENT_SHADER,ofToDataPath("shader/perlin.frag"));
+    //  perlinShader.linkProgram();
+    ofLogNotice("setup") << "loading done";
 
     receiver.setup(3615);
+    pd.setup(3616);
 }
 
 void dynamic_mapping::setupShader(){
@@ -187,6 +194,24 @@ void dynamic_mapping::update()
         }
     }
 
+    while(pd.hasWaitingMessages()){
+        // get the next message
+        ofxOscMessage m;
+        receiver.getNextMessage(m);
+        if(m.getAddress() == "/a"){
+            if (m.getNumArgs() == 3){
+                alpha[0] = m.getArgAsInt(0);
+                alpha[1] = m.getArgAsInt(1);
+                alpha[2] = m.getArgAsInt(2);
+            } else {
+                ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
+            }
+
+        }
+    }
+
+    std::cout << "blob size: " << blobs.size() << std::endl;
+
     if (showGui){
         gui.update();
     }
@@ -197,75 +222,51 @@ void dynamic_mapping::update()
     if (width != pix_share.getWidth() || height != pix_share.getHeight()){
         warper.setSourceRect(ofRectangle(0,0,pix_share.getWidth(), pix_share.getHeight()));
         fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
+        texture.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
     }
 
-    alpha++;
-    alpha = alpha%256;
     pix_share.update();
-    fgmask.getPixels().setChannel(4,pix_share.getPixels());
+    cvmask=ofxCv::toCv(pix_share.getPixels());
+    cvmask = ~cvmask;
+    ofImage tmp;
+    ofxCv::toOf(cvmask,tmp);
+    fgmask.getPixels().setChannel(4,tmp);
+    fgmask.update();
 }
 
 void dynamic_mapping::draw()
 {
     ofClear(clearColor);
-    //ofScale(ofGetWidth()/pix_share.getWidth(), ofGetHeight()/pix_share.getHeight(),0.);
-
-    // ofLogVerbose(__func__) << "pix_share.size(): " << pix_share.getWidth() << "x" << pix_share.getHeight();
-
-    fbo.begin();
-    ofClear(0, 0, 0, 0);
-
-    shader.begin();
-    //shader.setUniformTexture("maskTex", texture, 1 );
-    shader.setUniform1i("maskFlag", mask);
-    shader.setUniform1f("threshold", threshold);
-    shader.setUniform1f("gain", gain);
-    //ofLogNotice("shader values") << "mask : " << mask << " gain : " << gain << " threshold : " << threshold;
-    // images[0].draw(0,0);
-    shader.end();
-
-    //curFrame.draw(0,0);
-    fbo.end();
-
-    //======================== get our quad warp matrix.
 
     ofMatrix4x4 mat = warper.getMatrix();
 
-    //======================== use the matrix to transform our fbo.
-
     ofPushMatrix();
     ofMultMatrix(mat);
-    //pix_share.draw(0,0);
 
-    // voxelstrackPtr->composer.m_sources[0]->getFbo().getTexture().draw(0,0);
-/*
+    ofPushMatrix();
+    ofPushStyle();
     ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
-    int i = 0;
-    for(auto blob : blobs){
-      ofRectangle rect = blob.bounding_box;
-      if (i<images.size()){
-          ofSetColor(255, 255, 255,alpha);
-          images[i].draw(rect.x,rect.y,rect.width, rect.height);
-      }
+
+    for(int i = 0; i<blobs.size() && i<images.size(); i++){
+      ofRectangle rect = blobs[i].bounding_box;
+      ofSetColor(255, 255, 255, alpha[0]);
+      images[i].draw(rect.x,rect.y,rect.width, rect.height);
     }
-    */
-//    ofSetColor(255,255,255,255);
-
-  //  ofScale(1.,1.,0.);
-    //fgmask.draw(0,0);
-    pix_share.draw(0,0);
-
-
-    //ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
-
-    // for (auto blob : blobs) blob.draw();
-    // voxelstrackPtr->contour.finder.draw();
-    // fbo.draw(0, 0);
-
+    ofPopStyle();
     ofPopMatrix();
 
+  //  ofSetColor(ofColor::white);
+//    ofEnableAlphaBlending();
+    //pix_share.draw();
+    fgmask.draw(0,0);
+  //  ofEnableAlphaBlending();
+
+    //fbo.draw(0, 0);
+
+    ofPopMatrix();
 /*
     perlinShader.begin();
+    ofRect(0, 0, ofGetWidth(), ofGetHeight());
     perlinShader.end();
 */
     if (showGui){

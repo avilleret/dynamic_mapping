@@ -6,6 +6,7 @@
 #include "ofxDatGui.h"
 #include "Pix_share.h"
 #include "ofxOsc.h"
+#include "ofxCv.h"
 
 struct Blob {
     int id;
@@ -36,18 +37,21 @@ private:
     ofShader    perlinShader;
     std::vector<ofImage> images;
     ofTexture texture;
+    ofTexture masktext;
+    ofImage fgmask;
+    cv::Mat cvmask;
     ofColor clearColor;
 
     Pix_share pix_share;
 
-    ofxOscReceiver receiver;
+    ofxOscReceiver receiver, pd;
 
     std::vector<Blob> blobs;
 
-    ofImage fgmask;;
 
     float threshold, gain;
-    int alpha;
+    int alpha[3] = {255,255,255};
+    int smokeAlpha[3];
     bool mask;
     bool showGui;
 
