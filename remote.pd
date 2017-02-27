@@ -1,4 +1,4 @@
-#N canvas 191 485 726 474 10;
+#N canvas 188 498 808 474 10;
 #X obj 152 440 net/udpsend;
 #X obj 152 372 osc/packOSC;
 #X msg 182 412 connect 127.0.0.1 3616;
@@ -57,8 +57,8 @@
 #X connect 15 0 6 0;
 #X connect 16 0 7 0;
 #X coords 0 -1 1 1 150 100 1 25 6;
-#X restore 85 54 pd srcpoint;
-#N canvas 0 106 469 306 srcpoint 0;
+#X restore 35 54 pd srcpoint;
+#N canvas 0 119 469 306 srcpoint 0;
 #X obj 31 218 pack 0 0 0 0 0 0 0 0;
 #X obj 31 171 t b a;
 #X obj 79 140 t b a;
@@ -112,11 +112,68 @@
 #X connect 15 0 7 0;
 #X connect 17 0 16 0;
 #X coords 0 -1 1 1 150 100 1 25 6;
-#X restore 246 52 pd srcpoint;
+#X restore 196 54 pd srcpoint;
 #X obj 182 392 loadbang;
+#N canvas 0 106 450 322 line 0;
+#X obj 65 39 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 214 256;
+#X text 54 38 h;
+#X text 54 58 s;
+#X text 54 78 b;
+#X text 54 98 a;
+#X obj 46 196 pack 0 0 0 0;
+#X obj 61 150 t b a;
+#X obj 111 150 t b a;
+#X obj 161 150 t b a;
+#X obj 174 58 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
+-262144 -1 -1 41 256;
+#X obj 174 78 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
+-262144 -1 -1 0 256;
+#X obj 174 98 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
+-262144 -1 -1 2 256;
+#X obj 220 149 t b a;
+#X obj 270 149 t b a;
+#X text 133 77 vert.;
+#X text 132 56 hori.;
+#X text 131 99 width;
+#X msg 46 248 sendtyped /line/hsba ffff \$1 \$2 \$3 \$4;
+#X obj 65 59 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 63 256;
+#X obj 65 79 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 255 256;
+#X obj 65 99 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 255 256;
+#X obj 205 195 pack 0 0 0;
+#X msg 205 217 sendtyped /line/hvw iif \$1 \$2 \$3;
+#X text 136 37 lines control;
+#X obj 78 285 outlet;
+#X connect 0 0 5 0;
+#X connect 5 0 17 0;
+#X connect 6 0 5 0;
+#X connect 6 1 5 1;
+#X connect 7 0 5 0;
+#X connect 7 1 5 2;
+#X connect 8 0 5 0;
+#X connect 8 1 5 3;
+#X connect 9 0 21 0;
+#X connect 10 0 12 0;
+#X connect 11 0 13 0;
+#X connect 12 0 21 0;
+#X connect 12 1 21 1;
+#X connect 13 0 21 0;
+#X connect 13 1 21 2;
+#X connect 17 0 24 0;
+#X connect 18 0 6 0;
+#X connect 19 0 7 0;
+#X connect 20 0 8 0;
+#X connect 21 0 22 0;
+#X connect 22 0 24 0;
+#X coords 0 -1 1 1 200 80 1 50 35;
+#X restore 355 74 pd line;
 #X connect 1 0 0 0;
 #X connect 2 0 0 0;
 #X connect 3 0 0 0;
 #X connect 4 0 1 0;
 #X connect 5 0 1 0;
 #X connect 6 0 2 0;
+#X connect 7 0 1 0;
