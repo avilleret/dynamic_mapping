@@ -1,7 +1,7 @@
-#N canvas 182 288 419 493 10;
+#N canvas 1360 355 419 493 10;
 #X obj 152 372 osc/packOSC;
-#X msg 182 412 connect 127.0.0.1 3616;
-#X msg 93 414 disconnect;
+#X msg 182 442 connect 127.0.0.1 3616;
+#X msg 93 444 disconnect;
 #N canvas 0 93 469 306 srcpoint 0;
 #X obj 31 218 pack 0 0 0 0 0 0 0 0;
 #X obj 31 171 t b a;
@@ -14,17 +14,17 @@
 #X msg 31 243 sendtyped /warping/src ffffffff \$1 \$2 \$3 \$4 \$5 \$6
 \$7 \$8;
 #X obj 31 13 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
--262144 -1 -1 180 256;
+-262144 -1 -1 182 256;
 #X obj 31 34 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
 -262144 -1 -1 227 256;
 #X obj 111 14 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
--262144 -1 -1 470 256;
+-262144 -1 -1 469.86 256;
 #X obj 111 34 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
 -262144 -1 -1 227 256;
 #X obj 111 64 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
--262144 -1 -1 470 256;
+-262144 -1 -1 436 256;
 #X obj 111 84 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
--262144 -1 -1 377 256;
+-262144 -1 -1 363 256;
 #X obj 31 64 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
 -262144 -1 -1 180 256;
 #X obj 31 84 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
@@ -112,10 +112,10 @@
 #X connect 17 0 16 0;
 #X coords 0 -1 1 1 150 100 1 25 6;
 #X restore 196 54 pd srcpoint;
-#X obj 182 392 loadbang;
-#N canvas 0 106 450 322 line 0;
+#X obj 182 422 loadbang;
+#N canvas 0 105 450 322 line 0;
 #X obj 65 39 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 214 256;
+-1 -1 127 256;
 #X text 54 38 h;
 #X text 54 58 s;
 #X text 54 78 b;
@@ -125,11 +125,11 @@
 #X obj 111 150 t b a;
 #X obj 161 150 t b a;
 #X obj 174 58 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
--262144 -1 -1 220 256;
+-262144 -1 -1 200 256;
 #X obj 174 78 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
 -262144 -1 -1 0 256;
 #X obj 174 98 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
--262144 -1 -1 2 256;
+-262144 -1 -1 1 256;
 #X obj 220 149 t b a;
 #X obj 270 149 t b a;
 #X text 133 77 vert.;
@@ -137,7 +137,7 @@
 #X text 131 99 width;
 #X msg 46 248 sendtyped /line/hsba ffff \$1 \$2 \$3 \$4;
 #X obj 65 59 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 63 256;
+-1 -1 0 256;
 #X obj 65 79 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
 -1 -1 255 256;
 #X obj 65 99 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
@@ -169,7 +169,7 @@
 #X connect 22 0 24 0;
 #X coords 0 -1 1 1 200 80 1 50 35;
 #X restore 35 161 pd line;
-#N canvas 1304 354 525 525 receive 0;
+#N canvas 1298 352 525 525 receive 0;
 #X obj 156 70 osc/unpackOSC;
 #X obj 156 90 osc/routeOSC /b;
 #X msg 210 127 \$11;
@@ -204,73 +204,84 @@
 #X connect 9 3 13 0;
 #X connect 15 0 6 0;
 #X restore 238 159 pd receive distance;
-#N canvas 665 355 450 322 line 0;
-#X obj 65 39 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 145 256;
-#X text 54 38 h;
-#X text 54 58 s;
-#X text 54 78 b;
-#X text 54 98 a;
-#X obj 46 196 pack 0 0 0 0;
-#X obj 61 150 t b a;
-#X obj 111 150 t b a;
-#X obj 161 150 t b a;
+#N canvas 1091 345 450 322 line 0;
+#X obj 65 39 nbx 5 14 0 8 0 1 empty empty empty 0 -8 0 10 -262144 -1
+-1 0 256;
+#X text 54 58 h;
+#X text 54 78 s;
+#X text 54 98 b;
+#X text 54 118 a;
+#X obj 61 190 t b a;
+#X obj 111 190 t b a;
+#X obj 161 190 t b a;
 #X obj 65 59 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 255 256;
+-1 -1 95 256;
 #X obj 65 79 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 255 256;
+-1 -1 0 256;
 #X obj 65 99 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 54.6633 256;
-#X obj 78 285 outlet;
-#X text 63 116 blob color;
-#X msg 46 248 sendtyped /blob/hsba ffff \$1 \$2 \$3 \$4;
-#X obj 285 19 inlet;
-#X connect 0 0 5 0;
+-1 -1 0 256;
+#X obj 46 278 outlet;
+#X text 63 146 blob color;
+#X obj 279 15 inlet;
+#X obj 46 236 pack 0 0 0 0 0;
+#X obj 211 190 t b a;
+#X obj 65 119 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 0 256;
+#X text 49 38 id;
+#X obj 279 37 unpack;
+#X msg 177 76 set \$1;
+#X msg 46 258 sendtyped /blob/hsba iffff \$1 \$2 \$3 \$4 \$5;
+#X connect 0 0 14 0;
 #X connect 5 0 14 0;
-#X connect 6 0 5 0;
-#X connect 6 1 5 1;
-#X connect 7 0 5 0;
-#X connect 7 1 5 2;
+#X connect 5 1 14 1;
+#X connect 6 0 14 0;
+#X connect 6 1 14 2;
+#X connect 7 0 14 0;
+#X connect 7 1 14 3;
 #X connect 8 0 5 0;
-#X connect 8 1 5 3;
 #X connect 9 0 6 0;
 #X connect 10 0 7 0;
-#X connect 11 0 8 0;
-#X connect 14 0 12 0;
-#X connect 15 0 11 0;
-#X coords 0 -1 1 1 100 100 1 50 35;
-#X restore 238 200 pd line;
-#N canvas 160 556 604 448 mapdistance2color 0;
+#X connect 13 0 18 0;
+#X connect 14 0 20 0;
+#X connect 15 0 14 0;
+#X connect 15 1 14 4;
+#X connect 16 0 15 0;
+#X connect 18 0 0 0;
+#X connect 18 1 14 4;
+#X connect 18 1 19 0;
+#X connect 19 0 16 0;
+#X connect 20 0 11 0;
+#X coords 0 -1 1 1 100 130 1 50 35;
+#X restore 238 240 pd line;
+#N canvas 151 553 727 448 mapdistance2color 1;
 #X obj 63 18 inlet;
 #X obj 63 417 outlet;
 #X obj 63 139 sel 0;
 #X obj 63 167 f;
 #X obj 81 260 nosie;
-#X text 261 86 un nosie par blob;
-#X obj 63 80 unpack 0 0 0 0;
+#X text 383 320 un nosie par blob;
 #X floatatom 93 111 5 0 0 0 - - -, f 5;
 #X floatatom 133 111 5 0 0 0 - - -, f 5;
 #X floatatom 173 111 5 0 0 0 - - -, f 5;
-#X obj 63 52 list split 4;
 #X floatatom 63 189 5 0 0 0 - - -, f 5;
 #X obj 63 320 * 2;
 #X floatatom 73 342 5 0 0 0 - - -, f 5;
 #X obj 63 298 * 1;
-#X text 334 25 time factor;
-#X text 492 24 %ON;
-#X obj 488 45 nbx 5 14 0 100 0 1 empty empty empty 0 -8 0 10 -262144
+#X text 456 259 time factor;
+#X text 614 258 %ON;
+#X obj 610 279 nbx 5 14 0 100 0 1 empty empty empty 0 -8 0 10 -262144
 -1 -1 43 256;
-#X obj 356 45 nbx 5 14 0 100 0 1 empty empty empty 0 -8 0 10 -262144
+#X obj 478 279 nbx 5 14 0 100 0 1 empty empty empty 0 -8 0 10 -262144
 -1 -1 37 256;
-#X text 417 30 temps (ms) mini;
-#X obj 420 45 nbx 5 14 0 1e+37 0 1 empty empty empty 0 -8 0 10 -262144
+#X text 539 264 temps (ms) mini;
+#X obj 542 279 nbx 5 14 0 1e+37 0 1 empty empty empty 0 -8 0 10 -262144
 -1 -1 1000 256;
-#X obj 400 115 pack 0 0 0;
-#X obj 400 137 s noise_param;
-#X obj 420 64 t b a;
-#X obj 488 64 t b a;
-#X obj 265 135 s noise_start;
-#X obj 264 111 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+#X obj 522 349 pack 0 0 0;
+#X obj 522 371 s noise_param;
+#X obj 542 298 t b a;
+#X obj 610 298 t b a;
+#X obj 387 369 s noise_start;
+#X obj 386 345 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
 1;
 #X obj 151 260 nosie;
 #X obj 133 320 * 2;
@@ -284,47 +295,75 @@
 #X obj 253 320 * 2;
 #X floatatom 263 342 5 0 0 0 - - -, f 5;
 #X obj 253 298 * 1;
-#X connect 0 0 10 0;
+#X msg 63 382 0 \$1;
+#X msg 133 382 1 \$1;
+#X msg 193 382 2 \$1;
+#X msg 253 382 3 \$1;
+#X floatatom 213 111 5 0 0 0 - - -, f 5;
+#X floatatom 253 111 5 0 0 0 - - -, f 5;
+#X floatatom 293 111 5 0 0 0 - - -, f 5;
+#X obj 63 80 unpack 0 0 0 0 0 0 0 0, f 39;
+#X floatatom 333 111 5 0 0 0 - - -, f 5;
+#X obj 319 185 nbx 5 14 0 100 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 0 256;
+#X connect 0 0 44 0;
 #X connect 2 0 3 0;
 #X connect 2 1 3 0;
-#X connect 3 0 11 0;
-#X connect 4 0 14 1;
-#X connect 6 0 2 0;
-#X connect 6 1 7 0;
-#X connect 6 2 8 0;
-#X connect 6 3 9 0;
-#X connect 7 0 30 0;
-#X connect 8 0 34 0;
-#X connect 9 0 38 0;
-#X connect 10 0 6 0;
-#X connect 11 0 14 0;
-#X connect 12 0 13 0;
-#X connect 12 0 1 0;
-#X connect 14 0 12 0;
-#X connect 17 0 24 0;
+#X connect 3 0 9 0;
+#X connect 4 0 12 1;
+#X connect 6 0 28 0;
+#X connect 7 0 32 0;
+#X connect 8 0 36 0;
+#X connect 9 0 12 0;
+#X connect 10 0 11 0;
+#X connect 10 0 37 0;
+#X connect 12 0 10 0;
+#X connect 15 0 22 0;
+#X connect 16 0 19 0;
 #X connect 18 0 21 0;
-#X connect 20 0 23 0;
-#X connect 21 0 22 0;
-#X connect 23 0 21 0;
-#X connect 23 1 21 1;
-#X connect 24 0 21 0;
-#X connect 24 1 21 2;
-#X connect 26 0 25 0;
-#X connect 27 0 30 1;
-#X connect 28 0 29 0;
-#X connect 28 0 1 0;
-#X connect 30 0 28 0;
-#X connect 31 0 34 1;
-#X connect 32 0 33 0;
-#X connect 32 0 1 0;
-#X connect 34 0 32 0;
-#X connect 35 0 38 1;
-#X connect 36 0 37 0;
-#X connect 36 0 1 0;
-#X connect 38 0 36 0;
+#X connect 19 0 20 0;
+#X connect 21 0 19 0;
+#X connect 21 1 19 1;
+#X connect 22 0 19 0;
+#X connect 22 1 19 2;
+#X connect 24 0 23 0;
+#X connect 25 0 28 1;
+#X connect 26 0 27 0;
+#X connect 26 0 38 0;
+#X connect 28 0 26 0;
+#X connect 29 0 32 1;
+#X connect 30 0 31 0;
+#X connect 30 0 39 0;
+#X connect 32 0 30 0;
+#X connect 33 0 36 1;
+#X connect 34 0 35 0;
+#X connect 34 0 40 0;
+#X connect 36 0 34 0;
+#X connect 37 0 1 0;
+#X connect 38 0 1 0;
+#X connect 39 0 1 0;
+#X connect 40 0 1 0;
+#X connect 44 0 2 0;
+#X connect 44 1 6 0;
+#X connect 44 2 7 0;
+#X connect 44 3 8 0;
+#X connect 44 4 41 0;
+#X connect 44 5 42 0;
+#X connect 44 6 43 0;
+#X connect 44 7 45 0;
+#X connect 46 0 10 1;
+#X connect 46 0 26 1;
+#X connect 46 0 30 1;
+#X connect 46 0 34 1;
 #X restore 238 180 pd mapdistance2color;
-#X obj 152 440 iemnet/udpsend;
-#X connect 0 0 10 0;
+#X obj 152 470 iemnet/udpsend;
+#X obj 152 496 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+1;
+#X obj 152 394 spigot;
+#X obj 238 211 spigot;
+#X obj 280 211 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X connect 0 0 12 0;
 #X connect 1 0 10 0;
 #X connect 2 0 10 0;
 #X connect 3 0 0 0;
@@ -333,4 +372,9 @@
 #X connect 6 0 0 0;
 #X connect 7 0 9 0;
 #X connect 8 0 0 0;
-#X connect 9 0 8 0;
+#X connect 9 0 13 0;
+#X connect 10 0 11 0;
+#X connect 11 0 12 1;
+#X connect 12 0 10 0;
+#X connect 13 0 8 0;
+#X connect 14 0 13 1;
