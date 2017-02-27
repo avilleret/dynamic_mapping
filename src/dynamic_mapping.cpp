@@ -104,6 +104,8 @@ void dynamic_mapping::setup()
 
     receiver.setup(3615);
     pd.setup(3616);
+
+    blobs.resize(8);
 }
 
 void dynamic_mapping::setupShader(){
@@ -238,12 +240,16 @@ void dynamic_mapping::update()
                 distanceColor = color;
             }
         } else if (m.getAddress() == "/blob/noise/scale"){
-            m_dist2noise = m.getArgAsFloat(0);
+          m_dist2noise = m.getArgAsFloat(0);
+        } else if (m.getAddress() == "/blob/noise/speed"){
+          noiseSpeed = m.getArgAsFloat(0);
+        } else if (m.getAddress() == "/blob/noise/freq"){
+          noiseFreq = m.getArgAsFloat(0);
         } else if (m.getAddress() == "/blob/noise/color"){
-            if (m.getNumArgs() == 4)  {
-                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
-                noiseColor = color;
-            }
+          if (m.getNumArgs() == 4)  {
+            ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
+            noiseColor = color;
+          }
         } else if (m.getAddress() == "/warping/src"){
           if (m.getNumArgs() == 8){
             vector<ofPoint> line(warper.getSourcePoints());
@@ -296,20 +302,23 @@ void dynamic_mapping::update()
         gui.update();
     }
 
-    ofLogNotice("noise") << "update noise";
     for (int n = 0; n<noises.size() && n<blobs.size(); n++){
-        ofImage img = noises[n];
+        ofFloatPixelsRef pix = noises[n].getPixels();
         float alpha = 255.;
         if (m_dist2noise != 0.) alpha = fmod(ofClamp(m_dist2noise * blobs[n].distance, -255., 255.)+255., 255.);
-        for (int i = 0; i<img.getWidth(); i++){
-            for (int j=0; j<img.getHeight(); j++){
-                float noise = ofNoise(noiseFreq*i,noiseFreq*j,n);
-                ofColor c = noiseColor*noise;
-                c.a = alpha;
-                img.setColor(i,j,ofColor(noise));
-                img.setColor(i,j,ofColor::white);
+        int idx = 0;
+        for (int i = 0; i<noises[n].getWidth(); i++){
+            for (int j=0; j<noises[n].getHeight(); j++){
+                float noise = ofNoise(noiseFreq*i,noiseFreq*j,n+noiseSpeed*ofGetElapsedTimef());
+                pix[idx++] = noise;
+                pix[idx++] = noise;
+                pix[idx++] = noise;
+                pix[idx++] = 255;
+                // noises[n].setColor(i,j,ofColor(noise));
+                // noises[n].setColor(i,j,ofColor::white);
             }
         }
+        noises[n].update();
     }
 
     ofSetLogLevel("UPDATE", OF_LOG_WARNING);
@@ -340,11 +349,6 @@ void dynamic_mapping::draw()
     // ofLogNotice("DRAW");
     ofClear(clearColor);
 
-    for (int i = 0; i<noises.size(); i++){
-        noises[i].draw(i*138,10,128,128);
-    }
-    return;
-
     ofPushStyle();
     ofSetColor(lineColor);
     ofSetLineWidth(wline);
@@ -367,13 +371,18 @@ void dynamic_mapping::draw()
     ofPushStyle();
     ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
 
-    for(int i = 0; i<blobs.size() && blobColor.size(); i++){
+    for(int i = 0; i<blobs.size(); i++){
       ofRectangle rect = blobs[i].bounding_box;
       ofColor c = distanceColor;
       if (m_dist2luma != 0.) c.a = fmod(ofClamp(m_dist2luma * blobs[i].distance, -255., 255.)+255., 255.);
       ofSetColor(c);
       ofDrawRectangle(rect);
-      // images[i].draw(rect.x,rect.y,rect.width, rect.height);
+      if ( i < noises.size() ){
+        c = noiseColor;
+        if (m_dist2noise != 0.) c.a = fmod(ofClamp(m_dist2luma * blobs[i].distance, -255., 255.)+255., 255.);
+        ofSetColor(c);
+        noises[i].draw(rect.x,rect.y,rect.width, rect.height);
+      }
     }
 
     ofPopStyle();
