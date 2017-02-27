@@ -41,7 +41,11 @@ void dynamic_mapping::setup()
     int y = 0;
 
     fbo.allocate(w,h);
-
+    for (int i = 0; i<8; i++){
+        ofImage img;
+        img.allocate(128,128,OF_IMAGE_COLOR_ALPHA);
+        noises.push_back(img);
+    }
     // texture.allocate(640, 480,OF_IMAGE_COLOR_ALPHA);
     fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR);
     fgmask.setColor(ofColor::black);
@@ -227,12 +231,18 @@ void dynamic_mapping::update()
                 ofLogNotice("OSC") << c;
             }
         } else if (m.getAddress() == "/blob/dist/scale"){
-            m_dstMapping = m.getArgAsFloat(0);
+            m_dist2luma = m.getArgAsFloat(0);
         } else if (m.getAddress() == "/blob/dist/color"){
             if (m.getNumArgs() == 4)  {
                 ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
-                lineColor = color;
                 distanceColor = color;
+            }
+        } else if (m.getAddress() == "/blob/noise/scale"){
+            m_dist2noise = m.getArgAsFloat(0);
+        } else if (m.getAddress() == "/blob/noise/color"){
+            if (m.getNumArgs() == 4)  {
+                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
+                noiseColor = color;
             }
         } else if (m.getAddress() == "/warping/src"){
           if (m.getNumArgs() == 8){
@@ -286,6 +296,22 @@ void dynamic_mapping::update()
         gui.update();
     }
 
+    ofLogNotice("noise") << "update noise";
+    for (int n = 0; n<noises.size() && n<blobs.size(); n++){
+        ofImage img = noises[n];
+        float alpha = 255.;
+        if (m_dist2noise != 0.) alpha = fmod(ofClamp(m_dist2noise * blobs[n].distance, -255., 255.)+255., 255.);
+        for (int i = 0; i<img.getWidth(); i++){
+            for (int j=0; j<img.getHeight(); j++){
+                float noise = ofNoise(noiseFreq*i,noiseFreq*j,n);
+                ofColor c = noiseColor*noise;
+                c.a = alpha;
+                img.setColor(i,j,ofColor(noise));
+                img.setColor(i,j,ofColor::white);
+            }
+        }
+    }
+
     ofSetLogLevel("UPDATE", OF_LOG_WARNING);
     ofLogNotice("UPDATE") << "fgmask.allocate" ;
     fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
@@ -314,6 +340,11 @@ void dynamic_mapping::draw()
     // ofLogNotice("DRAW");
     ofClear(clearColor);
 
+    for (int i = 0; i<noises.size(); i++){
+        noises[i].draw(i*138,10,128,128);
+    }
+    return;
+
     ofPushStyle();
     ofSetColor(lineColor);
     ofSetLineWidth(wline);
@@ -339,7 +370,7 @@ void dynamic_mapping::draw()
     for(int i = 0; i<blobs.size() && blobColor.size(); i++){
       ofRectangle rect = blobs[i].bounding_box;
       ofColor c = distanceColor;
-      if (m_dstMapping != 0.) c.a = fmod(ofClamp(m_dstMapping * blobs[i].distance, -255., 255.)+255., 255.);
+      if (m_dist2luma != 0.) c.a = fmod(ofClamp(m_dist2luma * blobs[i].distance, -255., 255.)+255., 255.);
       ofSetColor(c);
       ofDrawRectangle(rect);
       // images[i].draw(rect.x,rect.y,rect.width, rect.height);
@@ -372,6 +403,7 @@ void dynamic_mapping::draw()
     ofRect(0, 0, ofGetWidth(), ofGetHeight());
     perlinShader.end();
 */
+
     if (showGui){
         warper.draw();
         gui.draw();

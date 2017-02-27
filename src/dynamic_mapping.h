@@ -54,14 +54,17 @@ private:
     ofColor lineColor=ofColor::white; // couleur des lignes
     int hline=12,vline=0; // nombre de lignes verticales et horizontales à dessiner
     float wline=5; // largeur des lignes à dessiner
+    std::vector<ofImage> noises;
 
     float threshold, gain;
     std::vector<ofColor> blobColor = {ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.)};
     ofColor distanceColor = ofColor::white;
+    ofColor noiseColor = ofColor::white;
     int smokeAlpha[3];
     bool mask;
     bool showGui;
-    float m_dstMapping;
+    float m_dist2luma, m_dist2noise;
+    float noiseFreq=0.3;
 
     void on2dPadEvent(ofxDatGui2dPadEvent e);
     void onSliderEvent(ofxDatGuiSliderEvent e);
