@@ -1,7 +1,7 @@
-#N canvas 1360 355 419 493 10;
-#X obj 152 372 osc/packOSC;
-#X msg 182 442 connect 127.0.0.1 3616;
-#X msg 93 444 disconnect;
+#N canvas 968 307 555 574 10;
+#X obj 152 402 osc/packOSC;
+#X msg 182 472 connect 127.0.0.1 3616;
+#X msg 93 474 disconnect;
 #N canvas 0 93 469 306 srcpoint 0;
 #X obj 31 218 pack 0 0 0 0 0 0 0 0;
 #X obj 31 171 t b a;
@@ -112,10 +112,10 @@
 #X connect 17 0 16 0;
 #X coords 0 -1 1 1 150 100 1 25 6;
 #X restore 196 54 pd srcpoint;
-#X obj 182 422 loadbang;
-#N canvas 0 105 450 322 line 0;
+#X obj 182 452 loadbang;
+#N canvas 0 102 450 322 line 0;
 #X obj 65 39 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 127 256;
+-1 -1 111 256;
 #X text 54 38 h;
 #X text 54 58 s;
 #X text 54 78 b;
@@ -125,7 +125,7 @@
 #X obj 111 150 t b a;
 #X obj 161 150 t b a;
 #X obj 174 58 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
--262144 -1 -1 200 256;
+-262144 -1 -1 70 256;
 #X obj 174 78 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
 -262144 -1 -1 0 256;
 #X obj 174 98 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10
@@ -137,15 +137,16 @@
 #X text 131 99 width;
 #X msg 46 248 sendtyped /line/hsba ffff \$1 \$2 \$3 \$4;
 #X obj 65 59 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 0 256;
+-1 -1 67 256;
 #X obj 65 79 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 255 256;
+-1 -1 28 256;
 #X obj 65 99 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 255 256;
+-1 -1 0 256;
 #X obj 205 195 pack 0 0 0;
 #X msg 205 217 sendtyped /line/hvw iif \$1 \$2 \$3;
 #X text 136 37 lines control;
 #X obj 78 285 outlet;
+#X obj 291 11 r reset;
 #X connect 0 0 5 0;
 #X connect 5 0 17 0;
 #X connect 6 0 5 0;
@@ -167,6 +168,8 @@
 #X connect 20 0 8 0;
 #X connect 21 0 22 0;
 #X connect 22 0 24 0;
+#X connect 25 0 5 0;
+#X connect 25 0 21 0;
 #X coords 0 -1 1 1 200 80 1 50 35;
 #X restore 35 161 pd line;
 #N canvas 1298 352 525 525 receive 0;
@@ -204,9 +207,9 @@
 #X connect 9 3 13 0;
 #X connect 15 0 6 0;
 #X restore 238 159 pd receive distance;
-#N canvas 1091 345 450 322 line 0;
+#N canvas 1088 344 450 322 line 0;
 #X obj 65 39 nbx 5 14 0 8 0 1 empty empty empty 0 -8 0 10 -262144 -1
--1 0 256;
+-1 2 256;
 #X text 54 58 h;
 #X text 54 78 s;
 #X text 54 98 b;
@@ -219,14 +222,14 @@
 #X obj 65 79 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
 -1 -1 0 256;
 #X obj 65 99 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 0 256;
+-1 -1 255 256;
 #X obj 46 278 outlet;
 #X text 63 146 blob color;
 #X obj 279 15 inlet;
 #X obj 46 236 pack 0 0 0 0 0;
 #X obj 211 190 t b a;
 #X obj 65 119 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
--1 -1 0 256;
+-1 -1 255 256;
 #X text 49 38 id;
 #X obj 279 37 unpack;
 #X msg 177 76 set \$1;
@@ -253,7 +256,7 @@
 #X connect 20 0 11 0;
 #X coords 0 -1 1 1 100 130 1 50 35;
 #X restore 238 240 pd line;
-#N canvas 151 553 727 448 mapdistance2color 1;
+#N canvas 997 511 727 448 mapdistance2color 0;
 #X obj 63 18 inlet;
 #X obj 63 417 outlet;
 #X obj 63 139 sel 0;
@@ -356,13 +359,61 @@
 #X connect 46 0 30 1;
 #X connect 46 0 34 1;
 #X restore 238 180 pd mapdistance2color;
-#X obj 152 470 iemnet/udpsend;
-#X obj 152 496 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+#X obj 152 500 iemnet/udpsend;
+#X obj 152 526 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
 1;
-#X obj 152 394 spigot;
+#X obj 152 424 spigot;
 #X obj 238 211 spigot;
 #X obj 280 211 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
 1;
+#N canvas 1371 402 450 322 line 1;
+#X obj 94 39 nbx 5 14 -100 100 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 0 256;
+#X obj 118 297 outlet;
+#X text 63 136 blob distance;
+#X text 63 146 mapping;
+#X msg 195 224 sendtyped /blob/dist/scale f \$1;
+#X text 56 38 scale;
+#X text 83 77 s;
+#X text 83 97 b;
+#X text 83 117 a;
+#X obj 90 178 t b a;
+#X obj 140 178 t b a;
+#X obj 190 178 t b a;
+#X obj 94 78 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 0 256;
+#X obj 94 98 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 254 256;
+#X obj 94 118 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 255 256;
+#X text 213 146 blob color;
+#X obj 79 220 pack 0 0 0 0;
+#X obj 94 58 nbx 5 14 0 255 0 1 empty empty empty 0 -8 0 10 -262144
+-1 -1 2 256;
+#X text 83 57 h;
+#X msg 79 253 sendtyped /blob/dist/color ffff \$1 \$2 \$3 \$4;
+#X obj 189 12 r reset;
+#X connect 0 0 4 0;
+#X connect 4 0 1 0;
+#X connect 9 0 16 0;
+#X connect 9 1 16 1;
+#X connect 10 0 16 0;
+#X connect 10 1 16 2;
+#X connect 11 0 16 0;
+#X connect 11 1 16 3;
+#X connect 12 0 9 0;
+#X connect 13 0 10 0;
+#X connect 14 0 11 0;
+#X connect 16 0 19 0;
+#X connect 17 0 16 0;
+#X connect 19 0 1 0;
+#X connect 20 0 16 0;
+#X connect 20 0 4 0;
+#X coords 0 -1 1 1 100 130 1 50 35;
+#X restore 368 240 pd line;
+#X obj 413 35 bng 50 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 413 90 s reset;
 #X connect 0 0 12 0;
 #X connect 1 0 10 0;
 #X connect 2 0 10 0;
@@ -378,3 +429,5 @@
 #X connect 12 0 10 0;
 #X connect 13 0 8 0;
 #X connect 14 0 13 1;
+#X connect 15 0 0 0;
+#X connect 16 0 17 0;
