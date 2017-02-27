@@ -200,6 +200,7 @@ void dynamic_mapping::update()
                 blob.bounding_box.height = m.getArgAsFloat(i++);
                 blob.velocity.x = m.getArgAsFloat(i++);
                 blob.velocity.y = m.getArgAsFloat(i++);
+                blob.distance = m.getArgAsFloat(i++);
                 blobs.push_back(blob);
             } else {
                 ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
@@ -224,6 +225,14 @@ void dynamic_mapping::update()
             ofLogNotice("OSC") << "blobColor:";
             for ( auto c : blobColor ){
                 ofLogNotice("OSC") << c;
+            }
+        } else if (m.getAddress() == "/blob/dist/scale"){
+            m_dstMapping = m.getArgAsFloat(0);
+        } else if (m.getAddress() == "/blob/dist/color"){
+            if (m.getNumArgs() == 4)  {
+                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
+                lineColor = color;
+                distanceColor = color;
             }
         } else if (m.getAddress() == "/warping/src"){
           if (m.getNumArgs() == 8){
@@ -329,7 +338,9 @@ void dynamic_mapping::draw()
 
     for(int i = 0; i<blobs.size() && blobColor.size(); i++){
       ofRectangle rect = blobs[i].bounding_box;
-      ofSetColor(blobColor[i]);
+      ofColor c = distanceColor;
+      if (m_dstMapping != 0.) c.a = fmod(ofClamp(m_dstMapping * blobs[i].distance, -255., 255.)+255., 255.);
+      ofSetColor(c);
       ofDrawRectangle(rect);
       // images[i].draw(rect.x,rect.y,rect.width, rect.height);
     }

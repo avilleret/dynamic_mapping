@@ -15,6 +15,7 @@ struct Blob {
     ofRectangle bounding_box;
     ofVec2f velocity;
     ofVec2f m_scale=ofVec2f(320,240);
+    float distance;
 
     void draw();
 };
@@ -56,9 +57,11 @@ private:
 
     float threshold, gain;
     std::vector<ofColor> blobColor = {ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.)};
+    ofColor distanceColor = ofColor::white;
     int smokeAlpha[3];
     bool mask;
     bool showGui;
+    float m_dstMapping;
 
     void on2dPadEvent(ofxDatGui2dPadEvent e);
     void onSliderEvent(ofxDatGuiSliderEvent e);
