@@ -54,6 +54,12 @@ private:
     ofColor lineColor=ofColor::white; // couleur des lignes
     int hline=12,vline=0; // nombre de lignes verticales et horizontales à dessiner
     float wline=5; // largeur des lignes à dessiner
+    float rotline=0.; // rotation
+    float noiseamount=0; // noise amount
+    float noisespeed=0.1; // changing speed
+    ofShader lineshader;
+    bool dolineShader = true;
+    ofVec2f scaleline = {1.,1.};
     std::vector<ofFloatImage> noises;
 
     float threshold, gain;

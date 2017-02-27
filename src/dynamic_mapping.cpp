@@ -18,7 +18,7 @@ void Blob::draw(){
 void dynamic_mapping::setup()
 {
     ofSetLogLevel(OF_LOG_NOTICE);
-    ofSetVerticalSync(false);
+    // ofSetVerticalSync(false);
 
     sourceRect = ofRectangle(180,227,290,150);
 
@@ -94,6 +94,11 @@ void dynamic_mapping::setup()
 
     // setupShader();
     shader.load("shader/mask");
+    if(ofIsGLProgrammableRenderer()){
+        lineshader.load("shaders_gl3/noise");
+    }else{
+        lineshader.load("shaders/noise");
+    }
 
     ofLogNotice("setup") << "load perlin shader" << std::endl;
     perlinShader.load("shader/perlin");
@@ -289,11 +294,19 @@ void dynamic_mapping::update()
                 ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
                 lineColor = color;
             }
-        } else if ( m.getAddress() == "/line/hvw"){
-            if (m.getNumArgs() == 3){
+        } else if ( m.getAddress() == "/line/hvwn"){
+            if (m.getNumArgs() == 5){
                 hline = m.getArgAsInt(0);
                 vline = m.getArgAsInt(1);
                 wline = m.getArgAsFloat(2);
+                noisespeed = m.getArgAsFloat(3);
+                noiseamount = m.getArgAsFloat(4);
+            }
+        } else if (m.getAddress() == "/line/sr"){
+            if (m.getNumArgs() == 3){
+                scaleline.x=m.getArgAsFloat(0);
+                scaleline.y=m.getArgAsFloat(1);
+                rotline=m.getArgAsFloat(2);
             }
         }
     }
@@ -302,23 +315,25 @@ void dynamic_mapping::update()
         gui.update();
     }
 
-    for (int n = 0; n<noises.size() && n<blobs.size(); n++){
-        ofFloatPixelsRef pix = noises[n].getPixels();
-        float alpha = 255.;
-        if (m_dist2noise != 0.) alpha = fmod(ofClamp(m_dist2noise * blobs[n].distance, -255., 255.)+255., 255.);
-        int idx = 0;
-        for (int i = 0; i<noises[n].getWidth(); i++){
-            for (int j=0; j<noises[n].getHeight(); j++){
-                float noise = ofNoise(noiseFreq*i,noiseFreq*j,n+noiseSpeed*ofGetElapsedTimef());
-                pix[idx++] = noise;
-                pix[idx++] = noise;
-                pix[idx++] = noise;
-                pix[idx++] = 255;
-                // noises[n].setColor(i,j,ofColor(noise));
-                // noises[n].setColor(i,j,ofColor::white);
+    if (m_dist2noise != 0.){
+        for (int n = 0; n<noises.size() && n<blobs.size(); n++){
+            ofFloatPixelsRef pix = noises[n].getPixels();
+            float alpha = 255.;
+            if (m_dist2noise != 0.) alpha = fmod(ofClamp(m_dist2noise * blobs[n].distance, -255., 255.)+255., 255.);
+            int idx = 0;
+            for (int i = 0; i<noises[n].getWidth(); i++){
+                for (int j=0; j<noises[n].getHeight(); j++){
+                    float noise = ofNoise(noiseFreq*i,noiseFreq*j,n+noiseSpeed*ofGetElapsedTimef());
+                    pix[idx++] = noise;
+                    pix[idx++] = noise;
+                    pix[idx++] = noise;
+                    pix[idx++] = 255;
+                    // noises[n].setColor(i,j,ofColor(noise));
+                    // noises[n].setColor(i,j,ofColor::white);
+                }
             }
+            noises[n].update();
         }
-        noises[n].update();
     }
 
     ofSetLogLevel("UPDATE", OF_LOG_WARNING);
@@ -349,18 +364,43 @@ void dynamic_mapping::draw()
     // ofLogNotice("DRAW");
     ofClear(clearColor);
 
+    // draw background lines
+    ofPushMatrix();
     ofPushStyle();
+    ofScale(scaleline.x, scaleline.y ,1.);
+    ofRotateZ(rotline);
     ofSetColor(lineColor);
-    ofSetLineWidth(wline);
-    for (int i = 0; i < hline; i++){
-        int x = i*ofGetWidth()/hline;
-        ofDrawLine(x,0,x,ofGetHeight());
+    ofFill();
+    if( dolineShader ){
+        lineshader.begin();
+            //we want to pass in some varrying values to animate our type / color
+            lineshader.setUniform1f("timeValX", noisespeed * ofGetElapsedTimef() * 0.1 );
+            lineshader.setUniform1f("timeValY", noisespeed * -ofGetElapsedTimef() * 0.18 );
+            lineshader.setUniform1f("noiseamount", noiseamount);
     }
     for (int i = 0; i < vline; i++){
         int y = i*ofGetHeight()/vline;
         ofDrawLine(0,y,ofGetWidth(),y);
     }
+
+
+    for (int i = 0; i < hline; i++){
+        int x = i*ofGetWidth()/hline;
+        ofPolyline line;
+        line.addVertex(x,0,0);
+        line.addVertex(x,ofGetHeight(),0);
+        line.addVertex(x+wline,ofGetHeight(),0);
+        line.addVertex(x+wline,0,0);
+        line.setClosed(true);
+        line = line.getResampledByCount(500);
+        line.draw();
+    }
+
+    if( dolineShader ){
+        lineshader.end();
+    }
     ofPopStyle();
+    ofPopMatrix();
 
     ofMatrix4x4 mat = warper.getMatrix();
 
