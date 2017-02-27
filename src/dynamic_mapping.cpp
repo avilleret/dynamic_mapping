@@ -213,13 +213,21 @@ void dynamic_mapping::update()
         // get the next message
         ofxOscMessage m;
         pd.getNextMessage(m);
-        if(m.getAddress() == "/a"){
-            if (m.getNumArgs() == 3){
-                alpha[0] = m.getArgAsInt(0);
-                alpha[1] = m.getArgAsInt(1);
-                alpha[2] = m.getArgAsInt(2);
+        if ( m.getAddress() == "/blob/hsba" ){
+            if (m.getNumArgs() % 4 == 0)  {
+                int i = 0;
+                while(i){
+                    ofColor color = ofColor::fromHsb(m.getArgAsFloat(i++),m.getArgAsFloat(i++),m.getArgAsFloat(i++),m.getArgAsFloat(i++));
+                    if (i/4 > blobColor.size()) blobColor.push_back(color);
+                    blobColor[i/4] = color;
+                }
             } else {
                 ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
+            }
+            std::reverse(blobColor.begin(), blobColor.end());
+            ofLogNotice("OSC") << "blobColor:";
+            for ( auto c : blobColor ){
+                ofLogNotice("OSC") << c;
             }
         } else if (m.getAddress() == "/warping/src"){
           if (m.getNumArgs() == 8){
@@ -323,13 +331,12 @@ void dynamic_mapping::draw()
     ofPushStyle();
     ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
 
-    /*
-    for(int i = 0; i<blobs.size() && i<images.size(); i++){
+    for(int i = 0; i<blobs.size() && blobColor.size(); i++){
       ofRectangle rect = blobs[i].bounding_box;
-      ofSetColor(255, 255, 255, alpha[0]);
-      images[i].draw(rect.x,rect.y,rect.width, rect.height);
+      ofSetColor(blobColor[i]);
+      ofDrawRectangle(rect);
+      // images[i].draw(rect.x,rect.y,rect.width, rect.height);
     }
-    */
 
     ofPopStyle();
     ofPopMatrix();

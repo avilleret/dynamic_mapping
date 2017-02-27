@@ -50,12 +50,12 @@ private:
     std::vector<Blob> blobs;
 
 
-    ofColor lineColor=ofColor::red; // couleur des lignes
+    ofColor lineColor=ofColor::white; // couleur des lignes
     int hline=12,vline=0; // nombre de lignes verticales et horizontales à dessiner
-    float wline=1; // largeur des lignes à dessiner
+    float wline=5; // largeur des lignes à dessiner
 
     float threshold, gain;
-    int alpha[3] = {255,255,255};
+    std::vector<ofColor> blobColor = {ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.)};
     int smokeAlpha[3];
     bool mask;
     bool showGui;
