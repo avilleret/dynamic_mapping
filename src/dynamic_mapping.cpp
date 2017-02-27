@@ -186,7 +186,7 @@ void dynamic_mapping::update()
         ofxOscMessage m;
         receiver.getNextMessage(m);
         if(m.getAddress() == "/b"){
-            if (m.getNumArgs() == 10){
+            if (m.getNumArgs() >= 10){
                 Blob blob;
                 int i=0;
                 blob.id = m.getArgAsInt(i++);
