@@ -255,6 +255,17 @@ void dynamic_mapping::update()
           } else {
             ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
           }
+        } else if ( m.getAddress() == "/line/hsba" ){
+            if (m.getNumArgs() == 4)  {
+                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
+                lineColor = color;
+            }
+        } else if ( m.getAddress() == "/line/hvw"){
+            if (m.getNumArgs() == 3){
+                hline = m.getArgAsInt(0);
+                vline = m.getArgAsInt(1);
+                wline = m.getArgAsFloat(2);
+            }
         }
     }
 
@@ -290,6 +301,19 @@ void dynamic_mapping::draw()
     // ofLogNotice("DRAW");
     ofClear(clearColor);
 
+    ofPushStyle();
+    ofSetColor(lineColor);
+    ofSetLineWidth(wline);
+    for (int i = 0; i < hline; i++){
+        int x = i*ofGetWidth()/hline;
+        ofDrawLine(x,0,x,ofGetHeight());
+    }
+    for (int i = 0; i < vline; i++){
+        int y = i*ofGetHeight()/vline;
+        ofDrawLine(0,y,ofGetWidth(),y);
+    }
+    ofPopStyle();
+
     ofMatrix4x4 mat = warper.getMatrix();
 
     ofPushMatrix();
@@ -312,8 +336,18 @@ void dynamic_mapping::draw()
 
   //  ofSetColor(ofColor::white);
 //    ofEnableAlphaBlending();
-    pix_share.draw();
-    //fgmask.draw(0,0);
+    //pix_share.draw();
+
+    // add some rectangle to mask the lines below the warper edge
+    int s = 2000;
+    int w = pix_share.getWidth();
+    int h = pix_share.getHeight();
+    ofSetColor(ofColor::black);
+    ofDrawRectangle(-s,-s,2*s+w,s); // haut
+    ofDrawRectangle(-s,h,2*s+w,s); // bas
+    ofDrawRectangle(-s,-s,s,2*s+h); // droite
+    ofDrawRectangle(w,-s,s,2*s+h); // gauche
+    fgmask.draw(0,0);
   //  ofEnableAlphaBlending();
 
     //fbo.draw(0, 0);
