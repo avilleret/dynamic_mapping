@@ -50,6 +50,7 @@ void dynamic_mapping::setup()
     warper.setTargetRect(ofRectangle(0,0,w,h));
     warper.setup();
 
+    gui.addFRM();
     gui.addSlider("source width", 0, 1920, 640);
     gui.addSlider("source height", 0, 1080, 480);
 
@@ -208,19 +209,14 @@ void dynamic_mapping::update()
     }
 
     // std::cout << "blob size: " << blobs.size() << std::endl;
-
     while(pd.hasWaitingMessages()){
         // get the next message
         ofxOscMessage m;
         pd.getNextMessage(m);
         if ( m.getAddress() == "/blob/hsba" ){
-            if (m.getNumArgs() % 4 == 0)  {
-                int i = 0;
-                while(i){
-                    ofColor color = ofColor::fromHsb(m.getArgAsFloat(i++),m.getArgAsFloat(i++),m.getArgAsFloat(i++),m.getArgAsFloat(i++));
-                    if (i/4 > blobColor.size()) blobColor.push_back(color);
-                    blobColor[i/4] = color;
-                }
+            if (m.getNumArgs() == 5)  {
+                    ofColor color = ofColor::fromHsb(m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3),m.getArgAsFloat(4));
+                    if(m.getArgAsInt(0)<blobColor.size()) blobColor[m.getArgAsInt(0)] = color;
             } else {
                 ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
             }
@@ -346,7 +342,7 @@ void dynamic_mapping::draw()
     //pix_share.draw();
 
     // add some rectangle to mask the lines below the warper edge
-    int s = 2000;
+    int s = 10000;
     int w = pix_share.getWidth();
     int h = pix_share.getHeight();
     ofSetColor(ofColor::black);
