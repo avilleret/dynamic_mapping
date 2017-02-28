@@ -16,6 +16,9 @@ struct Blob {
     ofVec2f velocity=ofVec2f(12,25);
     ofVec2f m_scale=ofVec2f(320,240);
     float distance=34.;
+    float age=0;
+
+    ofColor color = ofColor::white;
 
     void draw();
 };
@@ -31,6 +34,7 @@ class dynamic_mapping : public ofBaseApp
     void keyPressed (ofKeyEventArgs&);
 
 private:
+    ofFbo linefbo;
     ofRectangle sourceRect;
     ofxQuadWarp warper;
     ofFbo fbo;
@@ -52,11 +56,14 @@ private:
 
 
     ofColor lineColor=ofColor::white; // couleur des lignes
-    int hline=12,vline=0; // nombre de lignes verticales et horizontales à dessiner
+    float hline=12,vline=0; // nombre de lignes verticales et horizontales à dessiner
     float wline=5; // largeur des lignes à dessiner
     float rotline=0.; // rotation
     float noiseamount=0; // noise amount
     float noisespeed=0.1; // changing speed
+    float blobnoiseoffset=0.;
+    double blobnoisetime=0.;
+    double blobcoloroffset=0.;
     ofShader lineshader;
     bool dolineShader = true;
     ofVec2f scaleline = {1.,1.};
@@ -66,6 +73,7 @@ private:
     std::vector<ofColor> blobColor = {ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.)};
     ofColor distanceColor = ofColor::white;
     ofColor noiseColor = ofColor::white;
+    float blobnoiseamount = 1., blobnoisespeed=1.;
     int smokeAlpha[3];
     bool mask;
     bool showGui;
