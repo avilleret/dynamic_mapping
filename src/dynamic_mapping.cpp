@@ -255,6 +255,7 @@ void dynamic_mapping::update()
             if (m.getNumArgs() == 4)  {
                 ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
                 distanceColor = color;
+                ofLogNotice("OSC") << "distanceColor: " << distanceColor;
             }
         } else if (m.getAddress() == "/blob/noise/scale"){
           m_dist2noise = m.getArgAsFloat(0);
@@ -338,7 +339,7 @@ void dynamic_mapping::update()
                     pix[idx++] = noise;
                     pix[idx++] = noise;
                     pix[idx++] = noise;
-                    pix[idx++] = 255;
+                    pix[idx++] = noiseColor.a;
                     // noises[n].setColor(i,j,ofColor(noise));
                     // noises[n].setColor(i,j,ofColor::white);
                 }
@@ -374,6 +375,8 @@ void dynamic_mapping::draw()
 
     // ofLogNotice("DRAW");
     ofClear(clearColor);
+    ofSetColor(ofColor(0,0,0,255));
+    ofDrawRectangle(0,0,ofGetWidth(), ofGetHeight());
 
     ofPushStyle();
     ofPushMatrix();
@@ -386,6 +389,7 @@ void dynamic_mapping::draw()
 
   //  linefbo.begin();
     ofSetColor(lineColor);
+    ofSetLineWidth(wline);
     ofFill();
     if( dolineShader ){
         lineshader.begin();
@@ -417,9 +421,6 @@ void dynamic_mapping::draw()
 
     ofPopStyle();
     ofPopMatrix();
-    // linefbo.end();
-
-    //linefbo.draw(0,0,ofGetWidth(), ofGetHeight());
 
     ofMatrix4x4 mat = warper.getMatrix();
 
@@ -430,28 +431,38 @@ void dynamic_mapping::draw()
     ofPushStyle();
     ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
 
+    ofEnableAlphaBlending();
     for(int i = 0; i<blobs.size(); i++){
       ofRectangle rect = blobs[i].bounding_box;
       ofColor c = blobs[i].color;
       if (m_dist2luma != 0.) c.a = fmod(ofClamp(m_dist2luma * blobs[i].distance, -255., 255.)+255., 255.);
       blobnoisetime += blobnoisespeed;
       float noisevalue = blobcoloroffset + blobnoiseamount * std::max((ofNoise(blobnoisetime + blobs[i].age/1000.,i)-blobnoiseoffset)*(1-blobnoiseoffset),0.f);
-      c = c *noisevalue;
-      ofLogNotice("AGE") << i << " age: " << blobs[i].age << " color: " << c << " noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
+      c.r *= noisevalue;
+      c.g *= noisevalue;
+      c.b *= noisevalue;
+      c.a *= distanceColor.a;
+      ofLogNotice("1") << i << " age: " << blobs[i].age << " color: " << c << "\t noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
       ofSetColor(c);
       ofDrawRectangle(rect);
+
       if ( i < noises.size() ){
         c = noiseColor;
         c *= noisevalue;
+        c.a = noiseColor.a;
         if (m_dist2noise != 0.) c.a = fmod(ofClamp(m_dist2luma * blobs[i].distance, -255., 255.)+255., 255.);
         ofSetColor(c);
         noises[i].draw(rect.x,rect.y,rect.width, rect.height);
       }
+
+/*
       c = distanceColor;
-      c = c *noisevalue;
-      ofLogNotice("AGE") << i << " age: " << blobs[i].age << " color: " << c << " noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
+      c = c * noisevalue;
+      c.a = distanceColor.a;
+      ofLogNotice("AGE") << i << " age: " << blobs[i].age << " color: " << c << "\t noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
       ofSetColor(c);
       ofDrawRectangle(rect);
+*/
     }
 
     ofPopStyle();
