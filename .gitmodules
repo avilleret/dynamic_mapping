@@ -16,3 +16,6 @@
 [submodule "ofxGem"]
 	path = ofxGem
 	url = https://github.com/avilleret/ofxGem.git
+[submodule "ofxOSSIA"]
+	path = ofxOSSIA
+	url = https://github.com/OSSIA/ofxOSSIA.git

@@ -110,6 +110,11 @@ void dynamic_mapping::setup()
 
     receiver.setup(3615);
     pd.setup(3616);
+    ossia.setup();
+    lineParam.setup(ossia.get_root_node(), "line");
+    lineSize.setup(lineParam,"size", ofVec2f(12,0), ofVec2f(0.,0.), ofVec2f(100.,100.));
+    lineRotation.setup(lineParam,"angle",0.,0.,360.);
+    lineColor.setup(lineParam,"color", ofColor::white, ofColor(0.,0.,0.,0.), ofColor(255,255,255,255));
 
     blobs.resize(8);
 }
@@ -302,7 +307,9 @@ void dynamic_mapping::update()
           } else {
             ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
           }
-        } else if ( m.getAddress() == "/line/hsba" ){
+        }
+        /*
+         * else if ( m.getAddress() == "/line/hsba" ){
             if (m.getNumArgs() == 4)  {
                 ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
                 lineColor = color;
@@ -311,7 +318,7 @@ void dynamic_mapping::update()
             if (m.getNumArgs() == 5){
                 hline = m.getArgAsFloat(0);
                 vline = m.getArgAsFloat(1);
-                wline = m.getArgAsFloat(2);
+                lineWidth = m.getArgAsFloat(2);
                 noisespeed = m.getArgAsFloat(3);
                 noiseamount = m.getArgAsFloat(4);
             }
@@ -319,9 +326,10 @@ void dynamic_mapping::update()
             if (m.getNumArgs() == 3){
                 scaleline.x=m.getArgAsFloat(0);
                 scaleline.y=m.getArgAsFloat(1);
-                rotline=m.getArgAsFloat(2);
+                lineRotation=m.getArgAsFloat(2);
             }
         }
+        */
     }
 
     if (showGui){
@@ -383,13 +391,13 @@ void dynamic_mapping::draw()
     // draw background lines
     ofScale(scaleline.x, scaleline.y ,1.);
     ofTranslate(ofGetWidth()/2.,ofGetHeight()/2.);
-    ofRotateZ(rotline);
+    ofRotateZ(lineRotation);
 
     ofTranslate(-ofGetWidth()/2.,-ofGetHeight()/2.);
 
   //  linefbo.begin();
     ofSetColor(lineColor);
-    ofSetLineWidth(wline);
+    ofSetLineWidth(lineWidth);
     ofFill();
     if( dolineShader ){
         lineshader.begin();
@@ -398,13 +406,13 @@ void dynamic_mapping::draw()
             lineshader.setUniform1f("timeValY", noisespeed * -ofGetElapsedTimef() * 0.18 );
             lineshader.setUniform1f("noiseamount", noiseamount);
     }
-    for (int i = 0; i < vline; i++){
-        int y = i*ofGetHeight()/vline;
+    for (int i = 0; i < lineSize->y; i++){
+        int y = i*ofGetHeight()/lineSize->y;
         ofDrawLine(0,y,ofGetWidth(),y);
     }
 
-    for (int i = 0; i < hline; i++){
-        float x = i*float(ofGetWidth())/float(hline);
+    for (int i = 0; i < lineSize->x; i++){
+        float x = i*float(ofGetWidth())/float(lineSize->x);
         ofPolyline line;
         line.addVertex(x,-ofGetWidth(),0);
         line.addVertex(x,ofGetWidth(),0);
@@ -442,7 +450,7 @@ void dynamic_mapping::draw()
       c.g *= noisevalue;
       c.b *= noisevalue;
       c.a *= distanceColor.a;
-      ofLogNotice("1") << i << " age: " << blobs[i].age << " color: " << c << "\t noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
+      // ofLogNotice("1") << i << " age: " << blobs[i].age << " color: " << c << "\t noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
       ofSetColor(c);
       ofDrawRectangle(rect);
 

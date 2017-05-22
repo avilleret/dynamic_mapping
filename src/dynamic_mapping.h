@@ -7,6 +7,7 @@
 #include "Pix_share.h"
 #include "ofxOsc.h"
 #include "ofxCv.h"
+#include "ofxOssia.h"
 
 struct Blob {
     int id;
@@ -51,14 +52,15 @@ private:
     Pix_share pix_share;
 
     ofxOscReceiver receiver, pd;
+    ofxOssia ossia;
 
     std::vector<Blob> blobs;
 
-
-    ofColor lineColor=ofColor::white; // couleur des lignes
-    float hline=12,vline=0; // nombre de lignes verticales et horizontales à dessiner
-    float wline=5; // largeur des lignes à dessiner
-    float rotline=0.; // rotation
+    ossia::ParameterGroup lineParam;
+    ossia::Parameter<ofColor> lineColor; // couleur des lignes
+    ossia::Parameter<ofVec2f> lineSize; // nombre de lignes verticales et horizontales à dessiner
+    ossia::Parameter<float> lineWidth; // largeur des lignes à dessiner
+    ossia::Parameter<float> lineRotation; // rotation
     float noiseamount=0; // noise amount
     float noisespeed=0.1; // changing speed
     float blobnoiseoffset=0.;

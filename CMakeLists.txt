@@ -1,6 +1,6 @@
 project(dynamic_mapping)
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 include(../of/openFrameworks.cmake)
 find_package( DC1394 REQUIRED )
@@ -13,6 +13,7 @@ ofxaddon(ofxDatGui)
 ofxaddon(ofxGem)
 ofxaddon(ofxOsc)
 ofxaddon(ofxCv)
+ofxaddon(ofxOSSIA)
 
 include_directories(${CMAKE_CURRENT_LIST_DIR}/ofxCv/libs/ofxCv/include)
 
