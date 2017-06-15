@@ -88,13 +88,6 @@ void dynamic_mapping::setup()
         lineshader.load("shaders/noise");
     }
 
-    ofLogNotice("setup") << "load perlin shader" << std::endl;
-    perlinShader.load("shader/perlin");
-    //  perlinShader.load("shader/noise");
-    //  perlinShader.setupShaderFromFile(GL_FRAGMENT_SHADER,ofToDataPath("shader/perlin.frag"));
-    //  perlinShader.linkProgram();
-    ofLogNotice("setup") << "loading done";
-
     ossia.setup("OSCQuery", "dynamic_mapping", 6543, 8765);
     lineParam.setup(ossia.get_root_node(), "line");
     lineSize.setup(lineParam,"size", ofVec2f(12,0), ofVec2f(0.,0.), ofVec2f(100.,100.));
