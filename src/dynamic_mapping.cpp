@@ -23,19 +23,6 @@ void dynamic_mapping::setup()
 
     sourceRect = ofRectangle(180,227,290,150);
 
-    ofDirectory dir;
-    dir.listDir("images/");
-    dir.sort(); // in linux the file system doesn't return file lists ordered in alphabetical order
-
-    // you can now iterate through the files and load them into the ofImage vector
-    for(int i = 0; i < (int)dir.size(); i++){
-      ofImage img;
-      img.load(dir.getPath(i));
-      images.push_back(img);
-    }
-
-    // texture.loadData(images[0].getPixels());
-
     int w = ofGetWidth();
     int h = ofGetHeight();
     int x = 0;
@@ -108,9 +95,7 @@ void dynamic_mapping::setup()
     //  perlinShader.linkProgram();
     ofLogNotice("setup") << "loading done";
 
-    receiver.setup(3615);
-    pd.setup(3616);
-    ossia.setup();
+    ossia.setup("OSCQuery", "dynamic_mapping", 6543, 8765);
     lineParam.setup(ossia.get_root_node(), "line");
     lineSize.setup(lineParam,"size", ofVec2f(12,0), ofVec2f(0.,0.), ofVec2f(100.,100.));
     lineRotation.setup(lineParam,"angle",0.,0.,360.);
@@ -196,142 +181,142 @@ if(ofIsGLProgrammableRenderer()){
 
 void dynamic_mapping::update()
 {
-    // ofLogNotice("UPDATE");
-    if(receiver.hasWaitingMessages()) blobs.clear(); // clear only when new blos are received
-    // check for waiting messages
-    while(receiver.hasWaitingMessages()){
-        // get the next message
-        ofxOscMessage m;
-        receiver.getNextMessage(m);
-        if(m.getAddress() == "/b"){
-            if (m.getNumArgs() >= 11){
-                Blob blob;
-                int i=0;
-                blob.id = m.getArgAsInt(i++);
-                blob.centroid.x = m.getArgAsFloat(i++);
-                blob.centroid.y = m.getArgAsFloat(i++);
-                blob.area = m.getArgAsFloat(i++);
-                blob.bounding_box.x = m.getArgAsFloat(i++);
-                blob.bounding_box.y = m.getArgAsFloat(i++);
-                blob.bounding_box.width = m.getArgAsFloat(i++);
-                blob.bounding_box.height = m.getArgAsFloat(i++);
-                blob.velocity.x = m.getArgAsFloat(i++);
-                blob.velocity.y = m.getArgAsFloat(i++);
-                blob.distance = m.getArgAsFloat(i++);
-                blob.age = m.getArgAsFloat(i++);
-                blobs.push_back(blob);
-            } else {
-                ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
-            }
-        }
-    }
 
-    // std::cout << "blob size: " << blobs.size() << std::endl;
-    while(pd.hasWaitingMessages()){
-        // get the next message
-        ofxOscMessage m;
-        pd.getNextMessage(m);
-        if ( m.getAddress() == "/blob/hsba" ){
-            if (m.getNumArgs() == 5)  {
-                    ofColor color = ofColor::fromHsb(m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3),m.getArgAsFloat(4));
-                    for (auto b : blobs){
-                      if (b.id == m.getArgAsInt(0)) b.color = color;
-                      continue;
-                    }
-            } else {
-                ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
-            }
-            std::reverse(blobColor.begin(), blobColor.end());
-            ofLogNotice("OSC") << "blobColor:";
-            for ( auto b : blobs ){
-                ofLogNotice("OSC") << b.color;
-            }
-        } else if (m.getAddress() == "/blob/dist/scale"){
-          m_dist2luma = m.getArgAsFloat(0);
-        }  else if (m.getAddress() == "/blob/noiseamount"){
-          blobnoiseamount = m.getArgAsFloat(0);
-        } else if (m.getAddress() == "/blob/noiseoffset"){
-          blobnoiseoffset = m.getArgAsFloat(0);
-        } else if (m.getAddress() == "/blob/noisespeed"){
-          blobnoisespeed = m.getArgAsFloat(0);
-        } else if (m.getAddress() == "/blob/coloroffset"){
-          blobcoloroffset = m.getArgAsFloat(0);
-        } else if (m.getAddress() == "/blob/dist/color"){
-            if (m.getNumArgs() == 4)  {
-                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
-                distanceColor = color;
-                ofLogNotice("OSC") << "distanceColor: " << distanceColor;
-            }
-        } else if (m.getAddress() == "/blob/noise/scale"){
-          m_dist2noise = m.getArgAsFloat(0);
-        } else if (m.getAddress() == "/blob/noise/speed"){
-          noiseSpeed = m.getArgAsFloat(0);
-        } else if (m.getAddress() == "/blob/noise/freq"){
-          noiseFreq = m.getArgAsFloat(0);
-        } else if (m.getAddress() == "/blob/noise/color"){
-          if (m.getNumArgs() == 4)  {
-            ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
-            noiseColor = color;
-          }
-        } else if (m.getAddress() == "/warping/src"){
-          if (m.getNumArgs() == 8){
-            vector<ofPoint> line(warper.getSourcePoints());
-            int i =0;
-            line[0].x=m.getArgAsFloat(i++);
-            line[0].y=m.getArgAsFloat(i++);
-            line[1].x=m.getArgAsFloat(i++);
-            line[1].y=m.getArgAsFloat(i++);
-            line[2].x=m.getArgAsFloat(i++);
-            line[2].y=m.getArgAsFloat(i++);
-            line[3].x=m.getArgAsFloat(i++);
-            line[3].y=m.getArgAsFloat(i++);
-            warper.setSourcePoints(line);
-            ofLogNotice("OSC") << "update source points";
-          } else {
-            ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
-          }
-        } else if (m.getAddress() == "/warping/dst"){
-          if (m.getNumArgs() == 8){
-            vector<ofPoint> line(warper.getTargetPoints());
-            int i =0;
-            line[0].x=m.getArgAsFloat(i++);
-            line[0].y=m.getArgAsFloat(i++);
-            line[1].x=m.getArgAsFloat(i++);
-            line[1].y=m.getArgAsFloat(i++);
-            line[2].x=m.getArgAsFloat(i++);
-            line[2].y=m.getArgAsFloat(i++);
-            line[3].x=m.getArgAsFloat(i++);
-            line[3].y=m.getArgAsFloat(i++);
-            warper.setTargetPoints(line);
-            ofLogNotice("OSC") << "update target points";
-          } else {
-            ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
-          }
-        }
-        /*
-         * else if ( m.getAddress() == "/line/hsba" ){
-            if (m.getNumArgs() == 4)  {
-                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
-                lineColor = color;
-            }
-        } else if ( m.getAddress() == "/line/hvwn"){
-            if (m.getNumArgs() == 5){
-                hline = m.getArgAsFloat(0);
-                vline = m.getArgAsFloat(1);
-                lineWidth = m.getArgAsFloat(2);
-                noisespeed = m.getArgAsFloat(3);
-                noiseamount = m.getArgAsFloat(4);
-            }
-        } else if (m.getAddress() == "/line/sr"){
-            if (m.getNumArgs() == 3){
-                scaleline.x=m.getArgAsFloat(0);
-                scaleline.y=m.getArgAsFloat(1);
-                lineRotation=m.getArgAsFloat(2);
-            }
-        }
-        */
-    }
+//    // ofLogNotice("UPDATE");
+//    if(receiver.hasWaitingMessages()) blobs.clear(); // clear only when new blos are received
+//    // check for waiting messages
+//    while(receiver.hasWaitingMessages()){
+//        // get the next message
+//        ofxOscMessage m;
+//        receiver.getNextMessage(m);
+//        if(m.getAddress() == "/b"){
+//            if (m.getNumArgs() >= 11){
+//                Blob blob;
+//                int i=0;
+//                blob.id = m.getArgAsInt(i++);
+//                blob.centroid.x = m.getArgAsFloat(i++);
+//                blob.centroid.y = m.getArgAsFloat(i++);
+//                blob.area = m.getArgAsFloat(i++);
+//                blob.bounding_box.x = m.getArgAsFloat(i++);
+//                blob.bounding_box.y = m.getArgAsFloat(i++);
+//                blob.bounding_box.width = m.getArgAsFloat(i++);
+//                blob.bounding_box.height = m.getArgAsFloat(i++);
+//                blob.velocity.x = m.getArgAsFloat(i++);
+//                blob.velocity.y = m.getArgAsFloat(i++);
+//                blob.distance = m.getArgAsFloat(i++);
+//                blob.age = m.getArgAsFloat(i++);
+//                blobs.push_back(blob);
+//            } else {
+//                ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
+//            }
+//        }
+//    }
 
+//    // std::cout << "blob size: " << blobs.size() << std::endl;
+//    while(pd.hasWaitingMessages()){
+//        // get the next message
+//        ofxOscMessage m;
+//        pd.getNextMessage(m);
+//        if ( m.getAddress() == "/blob/hsba" ){
+//            if (m.getNumArgs() == 5)  {
+//                    ofColor color = ofColor::fromHsb(m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3),m.getArgAsFloat(4));
+//                    for (auto b : blobs){
+//                      if (b.id == m.getArgAsInt(0)) b.color = color;
+//                      continue;
+//                    }
+//            } else {
+//                ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
+//            }
+//            std::reverse(blobColor.begin(), blobColor.end());
+//            ofLogNotice("OSC") << "blobColor:";
+//            for ( auto b : blobs ){
+//                ofLogNotice("OSC") << b.color;
+//            }
+//        } else if (m.getAddress() == "/blob/dist/scale"){
+//          m_dist2luma = m.getArgAsFloat(0);
+//        }  else if (m.getAddress() == "/blob/noiseamount"){
+//          blobnoiseamount = m.getArgAsFloat(0);
+//        } else if (m.getAddress() == "/blob/noiseoffset"){
+//          blobnoiseoffset = m.getArgAsFloat(0);
+//        } else if (m.getAddress() == "/blob/noisespeed"){
+//          blobnoisespeed = m.getArgAsFloat(0);
+//        } else if (m.getAddress() == "/blob/coloroffset"){
+//          blobcoloroffset = m.getArgAsFloat(0);
+//        } else if (m.getAddress() == "/blob/dist/color"){
+//            if (m.getNumArgs() == 4)  {
+//                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
+//                distanceColor = color;
+//                ofLogNotice("OSC") << "distanceColor: " << distanceColor;
+//            }
+//        } else if (m.getAddress() == "/blob/noise/scale"){
+//          m_dist2noise = m.getArgAsFloat(0);
+//        } else if (m.getAddress() == "/blob/noise/speed"){
+//          noiseSpeed = m.getArgAsFloat(0);
+//        } else if (m.getAddress() == "/blob/noise/freq"){
+//          noiseFreq = m.getArgAsFloat(0);
+//        } else if (m.getAddress() == "/blob/noise/color"){
+//          if (m.getNumArgs() == 4)  {
+//            ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
+//            noiseColor = color;
+//          }
+//        } else if (m.getAddress() == "/warping/src"){
+//          if (m.getNumArgs() == 8){
+//            vector<ofPoint> line(warper.getSourcePoints());
+//            int i =0;
+//            line[0].x=m.getArgAsFloat(i++);
+//            line[0].y=m.getArgAsFloat(i++);
+//            line[1].x=m.getArgAsFloat(i++);
+//            line[1].y=m.getArgAsFloat(i++);
+//            line[2].x=m.getArgAsFloat(i++);
+//            line[2].y=m.getArgAsFloat(i++);
+//            line[3].x=m.getArgAsFloat(i++);
+//            line[3].y=m.getArgAsFloat(i++);
+//            warper.setSourcePoints(line);
+//            ofLogNotice("OSC") << "update source points";
+//          } else {
+//            ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
+//          }
+//        } else if (m.getAddress() == "/warping/dst"){
+//          if (m.getNumArgs() == 8){
+//            vector<ofPoint> line(warper.getTargetPoints());
+//            int i =0;
+//            line[0].x=m.getArgAsFloat(i++);
+//            line[0].y=m.getArgAsFloat(i++);
+//            line[1].x=m.getArgAsFloat(i++);
+//            line[1].y=m.getArgAsFloat(i++);
+//            line[2].x=m.getArgAsFloat(i++);
+//            line[2].y=m.getArgAsFloat(i++);
+//            line[3].x=m.getArgAsFloat(i++);
+//            line[3].y=m.getArgAsFloat(i++);
+//            warper.setTargetPoints(line);
+//            ofLogNotice("OSC") << "update target points";
+//          } else {
+//            ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
+//          }
+//        }
+//        /*
+//         * else if ( m.getAddress() == "/line/hsba" ){
+//            if (m.getNumArgs() == 4)  {
+//                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
+//                lineColor = color;
+//            }
+//        } else if ( m.getAddress() == "/line/hvwn"){
+//            if (m.getNumArgs() == 5){
+//                hline = m.getArgAsFloat(0);
+//                vline = m.getArgAsFloat(1);
+//                lineWidth = m.getArgAsFloat(2);
+//                noisespeed = m.getArgAsFloat(3);
+//                noiseamount = m.getArgAsFloat(4);
+//            }
+//        } else if (m.getAddress() == "/line/sr"){
+//            if (m.getNumArgs() == 3){
+//                scaleline.x=m.getArgAsFloat(0);
+//                scaleline.y=m.getArgAsFloat(1);
+//                lineRotation=m.getArgAsFloat(2);
+//            }
+//        }
+//        */
+//    }
     if (showGui){
         gui.update();
     }
@@ -383,6 +368,8 @@ void dynamic_mapping::draw()
 
     // ofLogNotice("DRAW");
     ofClear(clearColor);
+
+    // draw a solid black background
     ofSetColor(ofColor(0,0,0,255));
     ofDrawRectangle(0,0,ofGetWidth(), ofGetHeight());
 
@@ -408,9 +395,11 @@ void dynamic_mapping::draw()
     }
     for (int i = 0; i < lineSize->y; i++){
         int y = i*ofGetHeight()/lineSize->y;
+        // TODO change that to ofDrawRectangle
         ofDrawLine(0,y,ofGetWidth(),y);
     }
 
+    // FIXME : this shouldn't be necessary at all now
     for (int i = 0; i < lineSize->x; i++){
         float x = i*float(ofGetWidth())/float(lineSize->x);
         ofPolyline line;

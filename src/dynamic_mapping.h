@@ -5,7 +5,6 @@
 #include "ofxQuadWarp.h"
 #include "ofxDatGui.h"
 #include "Pix_share.h"
-#include "ofxOsc.h"
 #include "ofxCv.h"
 #include "ofxOssia.h"
 
@@ -51,7 +50,6 @@ private:
 
     Pix_share pix_share;
 
-    ofxOscReceiver receiver, pd;
     ofxOssia ossia;
 
     std::vector<Blob> blobs;

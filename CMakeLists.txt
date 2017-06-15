@@ -11,7 +11,6 @@ ofxaddon(ofxHomography)
 ofxaddon(ofxQuadWarp)
 ofxaddon(ofxDatGui)
 ofxaddon(ofxGem)
-ofxaddon(ofxOsc)
 ofxaddon(ofxCv)
 ofxaddon(ofxOSSIA)
 
