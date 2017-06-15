@@ -1,5 +1,5 @@
 #include "dynamic_mapping.h"
-
+#include <ossia/network/oscquery/oscquery_mirror.hpp>
 
 void Blob::draw(){
     ofPushMatrix();
@@ -101,7 +101,24 @@ void dynamic_mapping::setup()
     lineRotation.setup(lineParam,"angle",0.,0.,360.);
     lineColor.setup(lineParam,"color", ofColor::white, ofColor(0.,0.,0.,0.), ofColor(255,255,255,255));
 
+    connect_to_voxelstrack();
+
     blobs.resize(8);
+}
+
+void dynamic_mapping::connect_to_voxelstrack(){
+    // Setup OSSIA client
+    try{
+
+        std::string wsurl = "ws://127.0.0.1:5678";
+        auto protocol = new ossia::oscquery::oscquery_mirror_protocol{wsurl};
+        client_device = new ossia::net::generic_device{std::unique_ptr<ossia::net::protocol_base>(protocol), "voxelstrack"};
+        if (client_device) std::cout << "connected to device " << client_device->get_name() << " on " << wsurl << std::endl;
+
+    } catch (const std::exception&  e) {
+        ofLogError("ossia_client_connect") << e.what() << std::endl;
+        return;
+    }
 }
 
 void dynamic_mapping::setupShader(){
@@ -365,7 +382,6 @@ void dynamic_mapping::update()
 void dynamic_mapping::draw()
 {
 
-
     // ofLogNotice("DRAW");
     ofClear(clearColor);
 
@@ -465,10 +481,6 @@ void dynamic_mapping::draw()
     ofPopStyle();
     ofPopMatrix();
 
-  //  ofSetColor(ofColor::white);
-//    ofEnableAlphaBlending();
-    //pix_share.draw();
-
     // add some rectangle to mask the lines below the warper edge
     int s = 10000;
     int w = pix_share.getWidth();
@@ -484,11 +496,6 @@ void dynamic_mapping::draw()
     //fbo.draw(0, 0);
 
     ofPopMatrix();
-/*
-    perlinShader.begin();
-    ofRect(0, 0, ofGetWidth(), ofGetHeight());
-    perlinShader.end();
-*/
 
     if (showGui){
         warper.draw();
@@ -613,7 +620,7 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
 }
 
 void dynamic_mapping::reload(){
-    warper.load(); // reload last saved changes.)
+    warper.load(); // reload last saved changes
     warper.setSourceRect(sourceRect);
 /*
     vector<ofPoin> src = warper.getSourceRect();

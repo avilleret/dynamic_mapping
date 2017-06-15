@@ -40,8 +40,6 @@ private:
     ofFbo fbo;
     ofxDatGui gui;
     ofShader    shader;
-    ofShader    perlinShader;
-    std::vector<ofImage> images;
     // ofTexture texture;
     ofTexture masktext;
     ofImage fgmask;
@@ -51,6 +49,9 @@ private:
     Pix_share pix_share;
 
     ofxOssia ossia;
+    // ossia client
+    ossia::net::generic_device* client_device{};
+    ossia::net::local_protocol client_local_proto;
 
     std::vector<Blob> blobs;
 
@@ -88,4 +89,5 @@ private:
 
     void reload();
     void setupShader();
+    void connect_to_voxelstrack();
 };
