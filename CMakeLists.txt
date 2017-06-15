@@ -34,6 +34,8 @@ target_link_libraries(
     ${OPENFRAMEWORKS_LIBRARIES}
     ${DC1394_LIBRARIES}
     ${OpenCV_LIBS}
+    avahi-client
+    avahi-common
 )
 
 set_target_properties(
