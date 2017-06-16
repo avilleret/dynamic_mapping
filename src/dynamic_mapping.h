@@ -57,7 +57,7 @@ private:
 
     ossia::ParameterGroup lineParam;
     ossia::Parameter<ofColor> lineColor; // couleur des lignes
-    ossia::Parameter<ofVec2f> lineSize; // nombre de lignes verticales et horizontales à dessiner
+    ossia::Parameter<float> lineGap; // espace entre les lignes
     ossia::Parameter<float> lineWidth; // largeur des lignes à dessiner
     ossia::Parameter<float> lineRotation; // rotation
     float noiseamount=0; // noise amount
@@ -69,6 +69,7 @@ private:
     bool dolineShader = true;
     ofVec2f scaleline = {1.,1.};
     std::vector<ofFloatImage> noises;
+    unsigned int max_length;
 
     float threshold, gain;
     std::vector<ofColor> blobColor = {ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.)};

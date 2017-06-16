@@ -21,6 +21,8 @@ void dynamic_mapping::setup()
   ofSetVerticalSync(false);
   ofHideCursor();
 
+  max_length = sqrt(ofGetHeight()*ofGetHeight() + ofGetWidth()*ofGetWidth());
+
   sourceRect = ofRectangle(0,0,640,480);
 
   int w = ofGetWidth();
@@ -414,12 +416,22 @@ void dynamic_mapping::draw()
     //            lineshader.setUniform1f("timeValY", noisespeed * -ofGetElapsedTimef() * 0.18 );
     //            lineshader.setUniform1f("noiseamount", noiseamount);
     //    }
-    for (int i = 0; i < lineSize->y; i++){
-      int y = i*ofGetHeight()/lineSize->y;
-      // TODO change that to ofDrawRectangle
-      ofDrawLine(0,y,ofGetWidth(),y);
-    }
 
+    int pos = 0;
+    while(pos < max_length){
+      ofDrawRectangle(pos,0,lineWidth,max_length);
+      pos+=lineWidth + lineGap;
+    }
+    /*
+    for (int i = 0; i < lineSize->x; i++){
+      int x = i*ofGetHeight()/lineSize->x;
+      // TODO change that to ofDrawRectangle
+      //ofDrawLine(0,y,ofGetWidth(),y);
+      ofDrawRectangle(x,0,20,ofGetHeight());
+    }
+    */
+
+    /*
     // FIXME : this shouldn't be necessary at all now
     for (int i = 0; i < lineSize->x; i++){
       float x = i*float(ofGetWidth())/float(lineSize->x);
@@ -432,6 +444,7 @@ void dynamic_mapping::draw()
       line = line.getResampledByCount(500);
       line.draw();
     }
+    */
 
     //    if( dolineShader ){
     //        lineshader.end();
