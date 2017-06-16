@@ -60,6 +60,7 @@ private:
     ossia::Parameter<float> lineGap; // espace entre les lignes
     ossia::Parameter<float> lineWidth; // largeur des lignes à dessiner
     ossia::Parameter<float> lineRotation; // rotation
+    ossia::Parameter<ofVec2f> lineOffset; // line grid XY offset
     float noiseamount=0; // noise amount
     float noisespeed=0.1; // changing speed
     float blobnoiseoffset=0.;

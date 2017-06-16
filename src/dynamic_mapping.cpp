@@ -60,6 +60,7 @@ void dynamic_mapping::setup()
   lineWidth.setup(lineParam,"width",10,1,100);
   lineRotation.setup(lineParam,"angle",0.,0.,360.);
   lineColor.setup(lineParam,"color", ofColor::white, ofColor(0.,0.,0.,0.), ofColor(255,255,255,255));
+  lineOffset.setup(lineParam,"offset",ofVec2f(-100.,-250.),ofVec2f(-100,-100),ofVec2f(100,100));
 
   connect_to_voxelstrack();
 
@@ -405,50 +406,15 @@ void dynamic_mapping::draw()
     ofRotateZ(lineRotation);
 
     ofTranslate(-ofGetWidth()/2.,-ofGetHeight()/2.);
+    ofTranslate(lineOffset->x, lineOffset->y);
 
     ofSetColor(lineColor);
-    ofSetLineWidth(lineWidth);
-    ofFill();
-    //    if( dolineShader ){
-    //        lineshader.begin();
-    //            //we want to pass in some varrying values to animate our type / color
-    //            lineshader.setUniform1f("timeValX", noisespeed * ofGetElapsedTimef() * 0.1 );
-    //            lineshader.setUniform1f("timeValY", noisespeed * -ofGetElapsedTimef() * 0.18 );
-    //            lineshader.setUniform1f("noiseamount", noiseamount);
-    //    }
 
     int pos = 0;
     while(pos < max_length){
       ofDrawRectangle(pos,0,lineWidth,max_length);
       pos+=lineWidth + lineGap;
     }
-    /*
-    for (int i = 0; i < lineSize->x; i++){
-      int x = i*ofGetHeight()/lineSize->x;
-      // TODO change that to ofDrawRectangle
-      //ofDrawLine(0,y,ofGetWidth(),y);
-      ofDrawRectangle(x,0,20,ofGetHeight());
-    }
-    */
-
-    /*
-    // FIXME : this shouldn't be necessary at all now
-    for (int i = 0; i < lineSize->x; i++){
-      float x = i*float(ofGetWidth())/float(lineSize->x);
-      ofPolyline line;
-      line.addVertex(x,-ofGetWidth(),0);
-      line.addVertex(x,ofGetWidth(),0);
-      //line.addVertex(x+wline,ofGetWidth(),0);
-      //line.addVertex(x+wline,0,0);
-      line.setClosed(true);
-      line = line.getResampledByCount(500);
-      line.draw();
-    }
-    */
-
-    //    if( dolineShader ){
-    //        lineshader.end();
-    //    }
 
     ofPopStyle();
     ofPopMatrix();
