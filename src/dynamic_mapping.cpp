@@ -42,6 +42,31 @@ void dynamic_mapping::setup()
   warper.setTargetRect(ofRectangle(0,0,w,h));
   warper.setup();
 
+  reload();
+
+  // setupShader();
+  shader.load("shader/mask");
+  if(ofIsGLProgrammableRenderer()){
+    lineshader.load("shaders_gl3/noise");
+  }else{
+    lineshader.load("shaders/noise");
+  }
+
+  ossia.setup("OSCQuery", "dynamic_mapping", 6543, 8765);
+  lineParam.setup(ossia.get_root_node(), "line");
+  lineGap.setup(lineParam,"gap", 10, 0, 100);
+  lineWidth.setup(lineParam,"width",10,1,100);
+  lineRotation.setup(lineParam,"angle",0.,0.,360.);
+  lineColor.setup(lineParam,"color", ofColor::white, ofColor(0.,0.,0.,0.), ofColor(255,255,255,255));
+
+  connect_to_voxelstrack();
+
+  setupGui();
+
+  blobs.resize(8);
+}
+
+void dynamic_mapping::setupGui(){
   gui.addFRM();
   gui.addSlider("source width", 0, 1920, 640);
   gui.addSlider("source height", 0, 1080, 480);
@@ -71,6 +96,9 @@ void dynamic_mapping::setup()
   gui.addSlider("threshold",0,10,0.5);
   gui.addSlider("gain",0.,10.,1);
   gui.addColorPicker("Clear color", ofColor::blue);
+  gui.addSlider("hline", 0, 1000);
+  gui.addSlider("vline", 0, 1000);
+  gui.addSlider("rline", 0, 360);
 
   gui.addHeader("Dynamic Mapping");
   gui.addFooter();
@@ -80,26 +108,6 @@ void dynamic_mapping::setup()
   gui.onToggleEvent(this, &dynamic_mapping::onToggleEvent);
   gui.onColorPickerEvent(this, &dynamic_mapping::onColorPickerEvent);
   gui.setAutoDraw(false);
-
-  reload();
-
-  // setupShader();
-  shader.load("shader/mask");
-  if(ofIsGLProgrammableRenderer()){
-    lineshader.load("shaders_gl3/noise");
-  }else{
-    lineshader.load("shaders/noise");
-  }
-
-  ossia.setup("OSCQuery", "dynamic_mapping", 6543, 8765);
-  lineParam.setup(ossia.get_root_node(), "line");
-  lineSize.setup(lineParam,"size", ofVec2f(12,0), ofVec2f(0.,0.), ofVec2f(100.,100.));
-  lineRotation.setup(lineParam,"angle",0.,0.,360.);
-  lineColor.setup(lineParam,"color", ofColor::white, ofColor(0.,0.,0.,0.), ofColor(255,255,255,255));
-
-  connect_to_voxelstrack();
-
-  blobs.resize(8);
 }
 
 void dynamic_mapping::connect_to_voxelstrack(){

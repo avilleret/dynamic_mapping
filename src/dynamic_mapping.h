@@ -91,4 +91,6 @@ private:
     void reload();
     void setupShader();
     void connect_to_voxelstrack();
+
+    void setupGui();
 };
