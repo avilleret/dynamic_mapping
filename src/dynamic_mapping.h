@@ -77,6 +77,7 @@ private:
     float blobnoiseamount = 1., blobnoisespeed=1.;
     int smokeAlpha[3];
     bool mask;
+    bool drawLines, drawBlobs, drawInputImage;
     bool showGui;
     float m_dist2luma, m_dist2noise;
     float noiseFreq=0.3, noiseSpeed = 1.0;
