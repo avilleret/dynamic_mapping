@@ -55,12 +55,33 @@ void dynamic_mapping::setup()
   }
 
   ossia.setup("OSCQuery", "dynamic_mapping", 6543, 8765);
+  inputParam.setup(ossia.get_root_node(), "input");
+  inputGain.setup(inputParam, "gain", 1., 0., 10.);
+  inputThreshold.setup(inputParam, "threshold", 128, 0, 255);
+
   lineParam.setup(ossia.get_root_node(), "line");
-  lineGap.setup(lineParam,"gap", 10, 0, 100);
+  lineGap.setup(lineParam,"gap", 50, 0, 100);
   lineWidth.setup(lineParam,"width",10,1,100);
   lineRotation.setup(lineParam,"angle",0.,0.,360.);
   lineColor.setup(lineParam,"color", ofColor::white, ofColor(0.,0.,0.,0.), ofColor(255,255,255,255));
   lineOffset.setup(lineParam,"offset",ofVec2f(-100.,-250.),ofVec2f(-100,-100),ofVec2f(100,100));
+  lineNoiseSpeed.setup(lineParam, "noise_speed", ofVec2f(10,10), ofVec2f(0.,0.), ofVec2f(100.,100.));
+  lineNoiseAmount.setup(lineParam, "noise_amount", 0., 0., 100.);
+  lineResolution.setup(lineParam, "resolution", 100, 2, 500);
+
+  drawParam.setup(ossia.get_root_node(), "draw");
+  drawMask.setup(drawParam, "mask",true);
+  drawLines.setup(drawParam, "lines", true);
+  drawInputImage.setup(drawParam, "input", false);
+  drawBlobs.setup(drawParam, "blobs", true);
+
+  for (int i=0;i<3;i++){
+    blobColor[i].setup(ossia.get_root_node(), "color", ofFloatColor(0.,0.,0.,1.));
+  }
+
+
+
+
 
   connect_to_voxelstrack();
 
@@ -74,20 +95,6 @@ void dynamic_mapping::setupGui(){
   gui.addSlider("source width", 0, 1920, 640);
   gui.addSlider("source height", 0, 1080, 480);
 
-  /*
-    gui.add2dPad("top left", ofRectangle(0,0,w,h));
-    gui.add2dPad("top right", ofRectangle(0,0,w,h));
-    gui.add2dPad("bottom right", ofRectangle(0,0,w,h));
-    gui.add2dPad("bottom left", ofRectangle(0,0,w,h));
-    */
-
-  /*
-    gui.add2dPad("src tl", ofRectangle(0,0,640,480));
-    gui.add2dPad("src tr", ofRectangle(0,0,640,480));
-    gui.add2dPad("src br", ofRectangle(0,0,640,480));
-    gui.add2dPad("src bl", ofRectangle(0,0,640,480));
-    */
-
   gui.add2dPad("source rect position",ofRectangle(0,0,640,480));
   gui.addSlider("source rect width",0,640,640);
   gui.addSlider("source rect height",0,480,480);
@@ -96,7 +103,7 @@ void dynamic_mapping::setupGui(){
   gui.addToggle("Draw blobs", false);
   gui.addToggle("Draw input image", false);
   gui.addToggle("mask", false);
-  gui.addSlider("threshold",0,10,0.5);
+  gui.addSlider("threshold",0,255,128);
   gui.addSlider("gain",0.,10.,1);
   gui.addColorPicker("Clear color", ofColor::blue);
   gui.addSlider("hline", 0, 1000);
@@ -115,17 +122,20 @@ void dynamic_mapping::setupGui(){
 
 void dynamic_mapping::connect_to_voxelstrack(){
   // Setup OSSIA client
+  std::string wsurl = "ws://127.0.0.1:5678";
   try{
-
-    std::string wsurl = "ws://127.0.0.1:5678";
     auto protocol = new ossia::oscquery::oscquery_mirror_protocol{wsurl};
     client_device = new ossia::net::generic_device{std::unique_ptr<ossia::net::protocol_base>(protocol), "voxelstrack"};
-    if (client_device) std::cout << "connected to device " << client_device->get_name() << " on " << wsurl << std::endl;
 
   } catch (const std::exception&  e) {
     ofLogError("ossia_client_connect") << e.what() << std::endl;
     return;
   }
+
+   if (client_device) {
+     std::cout << "connected to device " << client_device->get_name() << " on " << wsurl << std::endl;
+     client_device->get_protocol().update(*client_device);
+   }
 }
 
 void dynamic_mapping::setupShader(){
@@ -206,145 +216,42 @@ void dynamic_mapping::setupShader(){
 void dynamic_mapping::update()
 {
 
-  //    // ofLogNotice("UPDATE");
-  //    if(receiver.hasWaitingMessages()) blobs.clear(); // clear only when new blos are received
-  //    // check for waiting messages
-  //    while(receiver.hasWaitingMessages()){
-  //        // get the next message
-  //        ofxOscMessage m;
-  //        receiver.getNextMessage(m);
-  //        if(m.getAddress() == "/b"){
-  //            if (m.getNumArgs() >= 11){
-  //                Blob blob;
-  //                int i=0;
-  //                blob.id = m.getArgAsInt(i++);
-  //                blob.centroid.x = m.getArgAsFloat(i++);
-  //                blob.centroid.y = m.getArgAsFloat(i++);
-  //                blob.area = m.getArgAsFloat(i++);
-  //                blob.bounding_box.x = m.getArgAsFloat(i++);
-  //                blob.bounding_box.y = m.getArgAsFloat(i++);
-  //                blob.bounding_box.width = m.getArgAsFloat(i++);
-  //                blob.bounding_box.height = m.getArgAsFloat(i++);
-  //                blob.velocity.x = m.getArgAsFloat(i++);
-  //                blob.velocity.y = m.getArgAsFloat(i++);
-  //                blob.distance = m.getArgAsFloat(i++);
-  //                blob.age = m.getArgAsFloat(i++);
-  //                blobs.push_back(blob);
-  //            } else {
-  //                ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
-  //            }
-  //        }
-  //    }
+  if (client_device){
+    // client_device->get_protocol().update(*client_device);
+    for (int i = 0; i < 3; i++ ){
+      std::stringstream ss;
+      ss << "/blob." << i;
+      ossia::net::node_base* node = ossia::net::find_node(*client_device, ss.str());
+      if (node) {
+        auto bbnode = ossia::net::find_node(*node,"bounding_box");
+        if (bbnode) {
+          ossia::value val = bbnode->get_address()->fetch_value();
+          ofVec4f bb = ossia::MatchingType<ofVec4f>::convertFromOssia(val);
+          blobs[i].bounding_box = ofRectangle(bb.x, bb.y, bb.z, bb.w);
+        }
+        /*
+        auto cnode = ossia::net::find_node(*node, "color");
+        if (cnode) {
+          ossia::value val = cnode->get_address()->fetch_value();
+          blobs[i].color = ossia::MatchingType<ofFloatColor>::convertFromOssia(val);
+        }
+        // ofLogNotice(ss.str()) << "coords: " << blobs[i].bounding_box;
+        // ofLogNotice(ss.str()) << "color: " << blobs[i].color.r << ";" << blobs[i].color.g << ";" << blobs[i].color.b << ";" << blobs[i].color.a;
+        */
+      }
+    }
+  } else {
+    if (ofGetElapsedTimeMillis() - lastTime > 1000.){
+      connect_to_voxelstrack();
+      lastTime = ofGetElapsedTimeMillis();
+    }
+  }
 
-  //    // std::cout << "blob size: " << blobs.size() << std::endl;
-  //    while(pd.hasWaitingMessages()){
-  //        // get the next message
-  //        ofxOscMessage m;
-  //        pd.getNextMessage(m);
-  //        if ( m.getAddress() == "/blob/hsba" ){
-  //            if (m.getNumArgs() == 5)  {
-  //                    ofColor color = ofColor::fromHsb(m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3),m.getArgAsFloat(4));
-  //                    for (auto b : blobs){
-  //                      if (b.id == m.getArgAsInt(0)) b.color = color;
-  //                      continue;
-  //                    }
-  //            } else {
-  //                ofLogError(__func__) << "wrong argument length: " << m.getNumArgs();
-  //            }
-  //            std::reverse(blobColor.begin(), blobColor.end());
-  //            ofLogNotice("OSC") << "blobColor:";
-  //            for ( auto b : blobs ){
-  //                ofLogNotice("OSC") << b.color;
-  //            }
-  //        } else if (m.getAddress() == "/blob/dist/scale"){
-  //          m_dist2luma = m.getArgAsFloat(0);
-  //        }  else if (m.getAddress() == "/blob/noiseamount"){
-  //          blobnoiseamount = m.getArgAsFloat(0);
-  //        } else if (m.getAddress() == "/blob/noiseoffset"){
-  //          blobnoiseoffset = m.getArgAsFloat(0);
-  //        } else if (m.getAddress() == "/blob/noisespeed"){
-  //          blobnoisespeed = m.getArgAsFloat(0);
-  //        } else if (m.getAddress() == "/blob/coloroffset"){
-  //          blobcoloroffset = m.getArgAsFloat(0);
-  //        } else if (m.getAddress() == "/blob/dist/color"){
-  //            if (m.getNumArgs() == 4)  {
-  //                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
-  //                distanceColor = color;
-  //                ofLogNotice("OSC") << "distanceColor: " << distanceColor;
-  //            }
-  //        } else if (m.getAddress() == "/blob/noise/scale"){
-  //          m_dist2noise = m.getArgAsFloat(0);
-  //        } else if (m.getAddress() == "/blob/noise/speed"){
-  //          noiseSpeed = m.getArgAsFloat(0);
-  //        } else if (m.getAddress() == "/blob/noise/freq"){
-  //          noiseFreq = m.getArgAsFloat(0);
-  //        } else if (m.getAddress() == "/blob/noise/color"){
-  //          if (m.getNumArgs() == 4)  {
-  //            ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
-  //            noiseColor = color;
-  //          }
-  //        } else if (m.getAddress() == "/warping/src"){
-  //          if (m.getNumArgs() == 8){
-  //            vector<ofPoint> line(warper.getSourcePoints());
-  //            int i =0;
-  //            line[0].x=m.getArgAsFloat(i++);
-  //            line[0].y=m.getArgAsFloat(i++);
-  //            line[1].x=m.getArgAsFloat(i++);
-  //            line[1].y=m.getArgAsFloat(i++);
-  //            line[2].x=m.getArgAsFloat(i++);
-  //            line[2].y=m.getArgAsFloat(i++);
-  //            line[3].x=m.getArgAsFloat(i++);
-  //            line[3].y=m.getArgAsFloat(i++);
-  //            warper.setSourcePoints(line);
-  //            ofLogNotice("OSC") << "update source points";
-  //          } else {
-  //            ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
-  //          }
-  //        } else if (m.getAddress() == "/warping/dst"){
-  //          if (m.getNumArgs() == 8){
-  //            vector<ofPoint> line(warper.getTargetPoints());
-  //            int i =0;
-  //            line[0].x=m.getArgAsFloat(i++);
-  //            line[0].y=m.getArgAsFloat(i++);
-  //            line[1].x=m.getArgAsFloat(i++);
-  //            line[1].y=m.getArgAsFloat(i++);
-  //            line[2].x=m.getArgAsFloat(i++);
-  //            line[2].y=m.getArgAsFloat(i++);
-  //            line[3].x=m.getArgAsFloat(i++);
-  //            line[3].y=m.getArgAsFloat(i++);
-  //            warper.setTargetPoints(line);
-  //            ofLogNotice("OSC") << "update target points";
-  //          } else {
-  //            ofLogError(__func__) << "Message " << m.getAddress() << " wrong argument length: " << m.getNumArgs();
-  //          }
-  //        }
-  //        /*
-  //         * else if ( m.getAddress() == "/line/hsba" ){
-  //            if (m.getNumArgs() == 4)  {
-  //                ofColor color = ofColor::fromHsb(m.getArgAsFloat(0),m.getArgAsFloat(1),m.getArgAsFloat(2),m.getArgAsFloat(3));
-  //                lineColor = color;
-  //            }
-  //        } else if ( m.getAddress() == "/line/hvwn"){
-  //            if (m.getNumArgs() == 5){
-  //                hline = m.getArgAsFloat(0);
-  //                vline = m.getArgAsFloat(1);
-  //                lineWidth = m.getArgAsFloat(2);
-  //                noisespeed = m.getArgAsFloat(3);
-  //                noiseamount = m.getArgAsFloat(4);
-  //            }
-  //        } else if (m.getAddress() == "/line/sr"){
-  //            if (m.getNumArgs() == 3){
-  //                scaleline.x=m.getArgAsFloat(0);
-  //                scaleline.y=m.getArgAsFloat(1);
-  //                lineRotation=m.getArgAsFloat(2);
-  //            }
-  //        }
-  //        */
-  //    }
   if (showGui){
     gui.update();
   }
 
+  /*
   for (int n = 0; n<noises.size() && n<blobs.size(); n++){
     ofFloatPixelsRef pix = noises[n].getPixels();
     float alpha = 255.;
@@ -363,25 +270,20 @@ void dynamic_mapping::update()
     }
     noises[n].update();
   }
+  */
 
-  ofSetLogLevel("UPDATE", OF_LOG_WARNING);
-  ofLogNotice("UPDATE") << "fgmask.allocate" ;
   fgmask.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
-  ofLogNotice("UPDATE") << "fgmask.setColor" ;
   fgmask.setColor(ofColor::black);
   // ofLogNotice("UPDATE") << "texture.allocate" ;
   // texture.allocate(pix_share.getWidth(), pix_share.getHeight(),OF_IMAGE_COLOR_ALPHA);
 
-  ofLogNotice("UPDATE") << "pix_share" ;
   pix_share.update();
-  ofLogNotice("UPDATE") << "cvmask" ;
   cvmask=ofxCv::toCv(pix_share.getPixels());
-  ofLogNotice("UPDATE") << "invert" ;
+  cv::threshold(cvmask, cvmask, inputThreshold, 255, cv::THRESH_TOZERO);
+  cvmask *= inputGain;
   cvmask = ~cvmask;
   ofImage tmp;
-  ofLogNotice("UPDATE") << "toOf" ;
   ofxCv::toOf(cvmask,tmp);
-  ofLogNotice("UPDATE") << "setChannel" ;
   fgmask.getPixels().setChannel(4,tmp);
   fgmask.update();
 }
@@ -410,11 +312,61 @@ void dynamic_mapping::draw()
 
     ofSetColor(lineColor);
 
-    int pos = 0;
+    float pos = 0;
+    /*
     while(pos < max_length){
       ofDrawRectangle(pos,0,lineWidth,max_length);
       pos+=lineWidth + lineGap;
     }
+    */
+
+
+    /*
+    if( dolineShader ){
+      lineshader.begin();
+      //we want to pass in some varrying values to animate our type / color
+      lineshader.setUniform1f("timeValX", lineNoiseSpeed.get().x * ofGetElapsedTimef() * 0.1 );
+      lineshader.setUniform1f("timeValY", lineNoiseSpeed.get().y * -ofGetElapsedTimef() * 0.1 );
+      lineshader.setUniform1f("noiseamount", lineNoiseAmount);
+    }
+    */
+
+
+    // FIXME : this shouldn't be necessary at all now
+    pos = 0.;
+    ofFill();
+    //ofSetLineWidth(1);
+    ofVec2f noiseTime(lineNoiseSpeed.get().x * ofGetElapsedTimef() * 0.01, lineNoiseSpeed.get().y * -ofGetElapsedTimef() * 0.01 );
+    while(pos < max_length){
+      ofPolyline line;
+      line.addVertex(pos,0,0);
+      line.addVertex(pos,max_length,0);
+      //line.addVertex(pos+lineWidth,max_length,0);
+      //line.addVertex(pos+lineWidth,0,0);
+      //line.setClosed(true);
+      line = line.getResampledByCount(lineResolution);
+      // line.draw();
+      ofFill();
+      ofBeginShape();
+      for (auto& pt : line.getVertices()){
+        pt.x += lineNoiseAmount*ofNoise(pt+noiseTime);
+        ofVertex(pt.x, pt.y);
+      }
+
+      for (int i = line.size(); i-- > 0;){
+        ofPoint pt = line[i];
+        ofVertex(pt.x+lineWidth,pt.y);
+      }
+
+      ofEndShape(OF_CLOSE);
+      pos+=lineWidth + lineGap;
+    }
+
+    /*
+    if( dolineShader ){
+      lineshader.end();
+    }
+    */
 
     ofPopStyle();
     ofPopMatrix();
@@ -430,9 +382,8 @@ void dynamic_mapping::draw()
     ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
 
     ofEnableAlphaBlending();
-    for(int i = 0; i<blobs.size(); i++){
-      ofRectangle rect = blobs[i].bounding_box;
-      ofColor c = blobs[i].color;
+    for(int i = 0; i<blobs.size() && i<10; i++){
+      /*
       if (m_dist2luma != 0.) c.a = fmod(ofClamp(m_dist2luma * blobs[i].distance, -255., 255.)+255., 255.);
       blobnoisetime += blobnoisespeed;
       float noisevalue = blobcoloroffset + blobnoiseamount * std::max((ofNoise(blobnoisetime + blobs[i].age/1000.,i)-blobnoiseoffset)*(1-blobnoiseoffset),0.f);
@@ -441,9 +392,11 @@ void dynamic_mapping::draw()
       c.b *= noisevalue;
       c.a *= distanceColor.a;
       // ofLogNotice("1") << i << " age: " << blobs[i].age << " color: " << c << "\t noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
-      ofSetColor(c);
-      ofDrawRectangle(rect);
+      */
+      ofSetColor(blobColor[i]);
+      ofDrawRectangle(blobs[i].bounding_box);
 
+      /*
       if ( i < noises.size() ){
         c = noiseColor;
         c *= noisevalue;
@@ -452,6 +405,7 @@ void dynamic_mapping::draw()
         ofSetColor(c);
         noises[i].draw(rect.x,rect.y,rect.width, rect.height);
       }
+      */
 
       /*
       c = distanceColor;
@@ -460,14 +414,14 @@ void dynamic_mapping::draw()
       ofLogNotice("AGE") << i << " age: " << blobs[i].age << " color: " << c << "\t noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
       ofSetColor(c);
       ofDrawRectangle(rect);
-*/
+      */
     }
 
     ofPopStyle();
     ofPopMatrix();
   }
 
-  if (mask){
+  if (drawMask){
     // add some rectangle to mask the lines below the warper edge
     int s = 10000;
     int w = pix_share.getWidth();
@@ -551,8 +505,8 @@ void dynamic_mapping::on2dPadEvent(ofxDatGui2dPadEvent e){
 
 void dynamic_mapping::onSliderEvent(ofxDatGuiSliderEvent e){
 
-  if (e.target->is("threshold")) threshold = e.value;
-  else if (e.target->is("gain")) gain = e.value;
+  if (e.target->is("threshold")) inputThreshold.set(e.value);
+  else if (e.target->is("gain")) inputGain.set(e.value);
   else if (e.target->is("source rect width")) {
     sourceRect.width = e.value;
     warper.setSourceRect(sourceRect);
@@ -564,11 +518,11 @@ void dynamic_mapping::onSliderEvent(ofxDatGuiSliderEvent e){
 
 void dynamic_mapping::onToggleEvent(ofxDatGuiToggleEvent e){
 
-  if (e.target->is("mask")) mask = e.checked;
-  else if (e.target->is("Draw lines")) drawLines = e.checked;
-  else if (e.target->is("Draw blobs")) drawBlobs = e.checked;
+  if (e.target->is("mask")) drawMask.set(e.checked);
+  else if (e.target->is("Draw lines")) drawLines.set(e.checked);
+  else if (e.target->is("Draw blobs")) drawBlobs.set(e.checked);
   else if (e.target->is("Draw input image")) {
-    drawInputImage = e.checked;
+    drawInputImage.set(e.checked);
     if (drawInputImage){
       warper.enableKeyboardShortcutsSrc();
       warper.enableMouseControlsSrc();
@@ -621,11 +575,12 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
       break;
     case 'l':
       reload();
+      break;
     case OF_KEY_TAB:
     {
       ofLogNotice("Window positionX") << ofGetWindowPositionX();
       if ( ofGetWindowPositionX() <= 0){
-        ofSetWindowPosition(1920,0);
+        ofSetWindowPosition(3600,0);
         ofSetWindowShape(1920,1200);
       } else ofSetWindowPosition(0,0);
     }
@@ -636,7 +591,7 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
 
 void dynamic_mapping::reload(){
   warper.load(); // reload last saved changes
-  warper.setSourceRect(sourceRect);
+  // warper.setSourceRect(sourceRect);
   /*
     vector<ofPoin> src = warper.getSourceRect();
     ofxDatGui2dPad * pad = gui.get2dPad("top left");

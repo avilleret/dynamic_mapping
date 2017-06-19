@@ -18,7 +18,7 @@ struct Blob {
     float distance=34.;
     float age=0;
 
-    ofColor color = ofColor::white;
+    ofFloatColor color = ofColor::white;
 
     void draw();
 };
@@ -55,14 +55,24 @@ private:
 
     std::vector<Blob> blobs;
 
-    ossia::ParameterGroup lineParam;
+    ossia::ParameterGroup lineParam, drawParam, inputParam;
     ossia::Parameter<ofColor> lineColor; // couleur des lignes
     ossia::Parameter<float> lineGap; // espace entre les lignes
     ossia::Parameter<float> lineWidth; // largeur des lignes à dessiner
     ossia::Parameter<float> lineRotation; // rotation
     ossia::Parameter<ofVec2f> lineOffset; // line grid XY offset
-    float noiseamount=0; // noise amount
-    float noisespeed=0.1; // changing speed
+    ossia::Parameter<ofVec2f> lineNoiseSpeed; // changing speed
+    ossia::Parameter<float> lineNoiseAmount; // noise amount
+    ossia::Parameter<int> lineResolution;
+
+    ossia::Parameter<float> inputGain;
+    ossia::Parameter<int> inputThreshold;
+    ossia::Parameter<bool> drawLines, drawBlobs, drawInputImage, drawMask;
+    ossia::Parameter<ofColor> blobColor[10];
+
+    // ossia::Parameter<ofQuaternion> test;
+
+    uint64 lastTime=0;
     float blobnoiseoffset=0.;
     double blobnoisetime=0.;
     double blobcoloroffset=0.;
@@ -72,14 +82,10 @@ private:
     std::vector<ofFloatImage> noises;
     unsigned int max_length;
 
-    float threshold, gain;
-    std::vector<ofColor> blobColor = {ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.), ofColor(0.,0.,0.,0.)};
     ofColor distanceColor = ofColor::white;
     ofColor noiseColor = ofColor::white;
     float blobnoiseamount = 1., blobnoisespeed=1.;
     int smokeAlpha[3];
-    bool mask;
-    bool drawLines, drawBlobs, drawInputImage;
     bool showGui;
     float m_dist2luma, m_dist2noise;
     float noiseFreq=0.3, noiseSpeed = 1.0;
@@ -88,7 +94,6 @@ private:
     void onSliderEvent(ofxDatGuiSliderEvent e);
     void onToggleEvent(ofxDatGuiToggleEvent e);
     void onColorPickerEvent(ofxDatGuiColorPickerEvent e);
-
 
     void reload();
     void setupShader();
