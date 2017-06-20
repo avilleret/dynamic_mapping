@@ -102,7 +102,7 @@ void dynamic_mapping::setup()
 
   setupGui();
 
-  blobs.resize(8);
+  blobs.resize(3);
 }
 
 void dynamic_mapping::setupGui(){
@@ -233,7 +233,14 @@ void dynamic_mapping::update()
 
   if (client_device){
     // client_device->get_protocol().update(*client_device);
-    for (int i = 0; i < 3; i++ ){
+    int blobNum = 0;
+    ossia::net::node_base* blobNode = ossia::net::find_node(*client_device, "blobNum");
+    if (blobNode){
+      ossia::value val = blobNode->get_address()->fetch_value();
+      blobNum = ossia::MatchingType<int>::convertFromOssia(val);
+    }
+    int i = 0;
+    for (i = 0; i < 3 && i < blobNum; i++ ){
       std::stringstream ss;
       ss << "/blob." << i;
       ossia::net::node_base* node = ossia::net::find_node(*client_device, ss.str());
@@ -254,6 +261,10 @@ void dynamic_mapping::update()
         // ofLogNotice(ss.str()) << "color: " << blobs[i].color.r << ";" << blobs[i].color.g << ";" << blobs[i].color.b << ";" << blobs[i].color.a;
         */
       }
+    }
+    for (;i<blobs.size();i++){
+      // reset bounding box on other blobs
+      blobs[i].bounding_box = ofRectangle(0,0,0,0);
     }
   } else {
     if (ofGetElapsedTimeMillis() - lastTime > 1000.){
