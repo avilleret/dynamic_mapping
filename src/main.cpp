@@ -4,10 +4,16 @@ int main()
 {
   ofGLFWWindowSettings settings;
 
-  settings.width = 1400;
-  settings.height = 1050;
-  settings.setPosition(ofPoint(1920,0));
+  settings.width = 1920;
+  settings.height = 1200;
+  settings.setPosition(ofPoint(3600,0));
+  //settings.setPosition(ofPoint(1680,0));
   settings.decorated = false;
+  //settings.windowMode = OF_FULLSCREEN;
+/*
+  settings.width = 950;
+  settings.height = 600;
+*/
   settings.title = "Dynamic Mapping";
 
   auto window = ofCreateWindow(settings);
