@@ -1,5 +1,7 @@
 #pragma once
 
+#include <opencv2/stitching.hpp>
+
 #include "ofxGem.h"
 // #include "ofxCv.h"
 

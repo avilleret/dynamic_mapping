@@ -1,5 +1,8 @@
 #pragma once
 
+
+#include <opencv2/stitching.hpp>
+
 #include "ofMain.h"
 #include "ofxLibdc.h"
 #include "ofxQuadWarp.h"
