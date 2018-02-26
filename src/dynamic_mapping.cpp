@@ -477,6 +477,8 @@ void dynamic_mapping::draw()
 
   if (showGui){
     gui.draw();
+    ofSetColor(ofColor::red);
+    ofDrawCircle(mouseX, mouseY, 4);
   }
 }
 
