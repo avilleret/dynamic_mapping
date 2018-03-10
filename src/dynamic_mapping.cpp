@@ -90,19 +90,15 @@ void dynamic_mapping::setup()
   drawInputImage.setup(drawParam, "input", false);
   drawBlobs.setup(drawParam, "blobs", true);
 
-  for (int i=0;i<3;i++){
+  for (int i=0;i<5;i++){
     blobColor[i].setup(ossia.get_root_node(), "color", ofFloatColor(0.,0.,0.,1.));
   }
-
-
-
-
 
   connect_to_voxelstrack();
 
   setupGui();
 
-  blobs.resize(3);
+  blobs.resize(5);
 }
 
 void dynamic_mapping::setupGui(){
@@ -138,6 +134,7 @@ void dynamic_mapping::setupGui(){
 void dynamic_mapping::connect_to_voxelstrack(){
   // Setup OSSIA client
   std::string wsurl = "ws://127.0.0.1:5678";
+
   try{
     auto protocol = new ossia::oscquery::oscquery_mirror_protocol{wsurl};
     client_device = new ossia::net::generic_device{std::unique_ptr<ossia::net::protocol_base>(protocol), "voxelstrack"};
@@ -147,10 +144,10 @@ void dynamic_mapping::connect_to_voxelstrack(){
     return;
   }
 
-   if (client_device) {
-     std::cout << "connected to device " << client_device->get_name() << " on " << wsurl << std::endl;
-     client_device->get_protocol().update(*client_device);
-   }
+  if (client_device) {
+    std::cout << "connected to device " << client_device->get_name() << " on " << wsurl << std::endl;
+    client_device->get_protocol().update(*client_device);
+  }
 }
 
 void dynamic_mapping::setupShader(){
@@ -240,7 +237,7 @@ void dynamic_mapping::update()
       blobNum = ossia::MatchingType<int>::convertFromOssia(val);
     }
     int i = 0;
-    for (i = 0; i < 3 && i < blobNum; i++ ){
+    for (i = 0; i < 5 && i < blobNum; i++ ){
       std::stringstream ss;
       ss << "/blob." << i;
       ossia::net::node_base* node = ossia::net::find_node(*client_device, ss.str());
@@ -407,6 +404,8 @@ void dynamic_mapping::draw()
     ofPushStyle();
     ofScale(pix_share.getWidth(), pix_share.getHeight(),0.);
 
+    // ofLogNotice("dynamic_mapping") << "blobs size: " << blobs.size();
+
     ofEnableAlphaBlending();
     for(int i = 0; i<blobs.size() && i<10; i++){
       /*
@@ -421,6 +420,7 @@ void dynamic_mapping::draw()
       */
       ofSetColor(blobColor[i]);
       ofDrawRectangle(blobs[i].bounding_box);
+      // ofLogNotice("dynamic_mapping") << i << ":" << blobs[i].bounding_box;
 
       /*
       if ( i < noises.size() ){
