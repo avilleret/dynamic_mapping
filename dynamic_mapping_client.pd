@@ -1,0 +1,68 @@
+#N canvas 711 743 897 379 10;
+#X obj 64 286 ossia.client;
+#X obj 64 308 print;
+#X msg 19 222 dump;
+#X obj 64 225 loadbang;
+#X msg 64 246 connect oscquery ws://nusmuk.local:8765;
+#X obj 42 148 ossia.remote color;
+#X msg 42 123 0 0 0 \$1;
+#X obj 42 105 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X msg 184 122 0 0 0 \$1;
+#X obj 184 104 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X msg 340 122 0 0 0 \$1;
+#X obj 340 104 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X obj 184 147 ossia.remote color.1;
+#X obj 340 147 ossia.remote color.2;
+#X obj 92 8 key;
+#X floatatom 273 30 5 0 0 0 - - -, f 5;
+#X text 129 6 touches de raccourcis: a z i o p;
+#X obj 91 31 sel 97 122 105 111 112;
+#X msg 494 122 0 0 0 \$1;
+#X obj 494 104 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X msg 650 122 0 0 0 \$1;
+#X obj 650 104 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+1;
+#X obj 494 147 ossia.remote color.3;
+#X obj 650 146 ossia.remote color.4;
+#X msg 676 173 set \$4;
+#X msg 537 171 set \$4;
+#X msg 387 166 set \$4;
+#X msg 243 170 set \$4;
+#X msg 90 170 set \$4;
+#X msg 42 190 0 0 0 0;
+#X connect 0 0 1 0;
+#X connect 2 0 0 0;
+#X connect 3 0 4 0;
+#X connect 4 0 0 0;
+#X connect 5 0 29 0;
+#X connect 5 1 28 0;
+#X connect 6 0 5 0;
+#X connect 7 0 6 0;
+#X connect 8 0 12 0;
+#X connect 9 0 8 0;
+#X connect 10 0 13 0;
+#X connect 11 0 10 0;
+#X connect 12 1 27 0;
+#X connect 13 1 26 0;
+#X connect 14 0 15 0;
+#X connect 14 0 17 0;
+#X connect 17 0 7 0;
+#X connect 17 1 9 0;
+#X connect 17 2 11 0;
+#X connect 17 3 19 0;
+#X connect 17 4 21 0;
+#X connect 18 0 22 0;
+#X connect 19 0 18 0;
+#X connect 20 0 23 0;
+#X connect 21 0 20 0;
+#X connect 22 1 25 0;
+#X connect 23 1 24 0;
+#X connect 24 0 21 0;
+#X connect 25 0 19 0;
+#X connect 26 0 11 0;
+#X connect 27 0 9 0;
+#X connect 28 0 7 0;
