@@ -12,6 +12,7 @@ ofxaddon(ofxQuadWarp)
 ofxaddon(ofxDatGui)
 ofxaddon(ofxGem)
 ofxaddon(ofxCv)
+ofxaddon(ofxXmlSettings)
 ofxaddon(ofxOSSIA)
 
 include_directories(${CMAKE_CURRENT_LIST_DIR}/ofxCv/libs/ofxCv/include)
@@ -36,6 +37,7 @@ target_link_libraries(
     ${OpenCV_LIBS}
     avahi-client
     avahi-common
+    ${CMAKE_CURRENT_LIST_DIR}/ofxOSSIA/libs/ossia/lib/linux64/libossia.a    
 )
 
 set_target_properties(

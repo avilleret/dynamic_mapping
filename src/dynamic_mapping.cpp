@@ -59,8 +59,6 @@ void dynamic_mapping::setup()
   warper.setTargetRect(ofRectangle(0,0,w,h));
   warper.setup();
 
-  reload();
-
   // setupShader();
   shader.load("shader/mask");
   if(ofIsGLProgrammableRenderer()){
@@ -99,10 +97,36 @@ void dynamic_mapping::setup()
   setupGui();
 
   blobs.resize(5);
+
+  reload();
+
+  reload();
 }
 
 void dynamic_mapping::setupGui(){
   gui.addFRM();
+
+  auto slider = gui.addSlider("window X offset", 0, 5000, 3600);
+  slider->setPrecision(0);
+  slider->onSliderEvent([this](ofxDatGuiSliderEvent e)
+  {
+    ofSetWindowPosition(e.value,0);
+  });
+
+  slider = gui.addSlider("window X size", 0, 5000, 1920);
+  slider->setPrecision(0);
+  slider->onSliderEvent([this](ofxDatGuiSliderEvent e)
+  {
+    ofSetWindowShape(e.value,ofGetWindowHeight());
+  });
+
+  slider = gui.addSlider("window Y size", 0, 5000, 1200);
+  slider->setPrecision(0);
+  slider->onSliderEvent([this](ofxDatGuiSliderEvent e)
+  {
+    ofSetWindowShape(ofGetWindowWidth(),e.value);
+  });
+
   gui.addSlider("source width", 0, 1920, 640);
   gui.addSlider("source height", 0, 1080, 480);
 
@@ -600,6 +624,7 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
       break;
     case 's':
       warper.save();
+      settings.save("settings.xml",&gui);
       break;
     case 'l':
       reload();
@@ -618,7 +643,8 @@ void dynamic_mapping::keyPressed(ofKeyEventArgs& key)
 }
 
 void dynamic_mapping::reload(){
-  warper.load(); // reload last saved changes
+  warper.load(); // reload last saved changes$
+  settings.load("settings.xml", &gui);
   // warper.setSourceRect(sourceRect);
   /*
     vector<ofPoin> src = warper.getSourceRect();

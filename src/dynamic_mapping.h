@@ -11,6 +11,8 @@
 #include "ofxCv.h"
 #include "ofxOssia.h"
 
+#include "ofxDatGuiSettings.h"
+
 struct Blob {
     int id;
     ofVec2f centroid;
@@ -103,4 +105,6 @@ private:
     void connect_to_voxelstrack();
 
     void setupGui();
+
+    ofxDatGuiSettings settings;
 };
