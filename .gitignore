@@ -7,3 +7,4 @@ debug/*
 
 bin/*
 !bin/data/
+*.xml
