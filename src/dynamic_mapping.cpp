@@ -88,9 +88,11 @@ void dynamic_mapping::setup()
   drawInputImage.setup(drawParam, "input", false);
   drawBlobs.setup(drawParam, "blobs", true);
 
+  /*
   for (int i=0;i<5;i++){
     blobColor[i].setup(ossia.get_root_node(), "color", ofFloatColor(0.,0.,0.,1.));
   }
+  */
 
   connect_to_voxelstrack();
 
@@ -127,12 +129,13 @@ void dynamic_mapping::setupGui(){
     ofSetWindowShape(ofGetWindowWidth(),e.value);
   });
 
-  gui.addSlider("source width", 0, 1920, 640);
-  gui.addSlider("source height", 0, 1080, 480);
+//  gui.addSlider("source width", 0, 1920, 640);
+//  gui.addSlider("source height", 0, 1080, 480);
 
-  gui.add2dPad("source rect position",ofRectangle(0,0,640,480));
-  gui.addSlider("source rect width",0,640,640);
-  gui.addSlider("source rect height",0,480,480);
+//  gui.add2dPad("source rect position",ofRectangle(0,0,640,480));
+//  gui.addSlider("source rect width",0,640,640);
+//  gui.addSlider("source rect height",0,480,480);
+
   gui.addBreak();
   gui.addToggle("Draw lines", false);
   gui.addToggle("Draw blobs", false);
@@ -144,6 +147,14 @@ void dynamic_mapping::setupGui(){
   gui.addSlider("hline", 0, 1000);
   gui.addSlider("vline", 0, 1000);
   gui.addSlider("rline", 0, 360);
+
+  auto tog = gui.addToggle("verbose");
+  tog->onToggleEvent([this](ofxDatGuiToggleEvent e){
+    if (e.checked)
+      ofSetLogLevel(OF_LOG_VERBOSE);
+    else
+      ofSetLogLevel(OF_LOG_NOTICE);
+  });
 
   gui.addHeader("Dynamic Mapping");
   gui.addFooter();
@@ -272,15 +283,15 @@ void dynamic_mapping::update()
           ofVec4f bb = ossia::MatchingType<ofVec4f>::convertFromOssia(val);
           blobs[i].bounding_box = ofRectangle(bb.x, bb.y, bb.z, bb.w);
         }
-        /*
+
         auto cnode = ossia::net::find_node(*node, "color");
         if (cnode) {
           ossia::value val = cnode->get_address()->fetch_value();
           blobs[i].color = ossia::MatchingType<ofFloatColor>::convertFromOssia(val);
         }
-        // ofLogNotice(ss.str()) << "coords: " << blobs[i].bounding_box;
-        // ofLogNotice(ss.str()) << "color: " << blobs[i].color.r << ";" << blobs[i].color.g << ";" << blobs[i].color.b << ";" << blobs[i].color.a;
-        */
+        ofLogVerbose(ss.str()) << "coords: " << blobs[i].bounding_box;
+        ofLogVerbose(ss.str()) << "color: " << blobs[i].color.r << ";" << blobs[i].color.g << ";" << blobs[i].color.b << ";" << blobs[i].color.a;
+
       }
     }
     for (;i<blobs.size();i++){
@@ -442,7 +453,7 @@ void dynamic_mapping::draw()
       c.a *= distanceColor.a;
       // ofLogNotice("1") << i << " age: " << blobs[i].age << " color: " << c << "\t noise: "<< noisevalue << " ddd " << ofNoise(blobs[i].age/1000.);
       */
-      ofSetColor(blobColor[i]);
+      ofSetColor(blobs[i].color);
       ofDrawRectangle(blobs[i].bounding_box);
       // ofLogNotice("dynamic_mapping") << i << ":" << blobs[i].bounding_box;
 

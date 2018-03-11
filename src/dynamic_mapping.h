@@ -73,7 +73,7 @@ private:
     ossia::Parameter<float> inputGain;
     ossia::Parameter<int> inputThreshold;
     ossia::Parameter<bool> drawLines, drawBlobs, drawInputImage, drawMask;
-    ossia::Parameter<ofColor> blobColor[10];
+    // ossia::Parameter<ofColor> blobColor[10];
 
     // ossia::Parameter<ofQuaternion> test;
 
